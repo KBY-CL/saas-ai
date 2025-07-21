@@ -1,0 +1,286 @@
+---
+alwaysApply: true
+---
+# CSS 수정 시 우선순위 Rules
+
+## 🚨 중요: CSS 문제 해결 시 반드시 지켜야 할 순서
+
+### 1. 최우선: Vuetify 내장 솔루션 사용
+CSS 문제가 발생했을 때 **반드시 먼저 확인할 것:**
+
+#### 스타일링 문제 → Vuetify 클래스 우선 적용
+```vue
+<!-- ❌ 잘못된 방법: 커스텀 CSS 즉시 작성 -->
+<template>
+  <div class="custom-container">
+    <div class="custom-card">내용</div>
+  </div>
+</template>
+
+<style scoped>
+.custom-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  margin: 10px;
+  background: #f5f5f5;
+  border-radius: 8px;
+}
+</style>
+
+<!-- ✅ 올바른 방법: Vuetify 클래스 우선 사용 -->
+<template>
+  <v-container class="d-flex justify-center align-center">
+    <v-card class="pa-5 ma-2" elevation="2">
+      내용
+    </v-card>
+  </v-container>
+</template>
+```
+
+#### 레이아웃 문제 → Vuetify Grid 시스템 활용
+```vue
+<!-- ❌ 피해야 할 방법 -->
+<style scoped>
+.grid-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 20px;
+}
+</style>
+
+<!-- ✅ 권장 방법 -->
+<template>
+  <v-row>
+    <v-col cols="12" md="4" v-for="item in items" :key="item.id">
+      <v-card>{{ item.content }}</v-card>
+    </v-col>
+  </v-row>
+</template>
+```
+
+### 2. 두 번째: Vuetify 유틸리티 클래스 활용
+
+#### 간격 조정
+```vue
+<!-- Vuetify 스페이싱 클래스 사용 -->
+<v-card class="ma-4 pa-6">  <!-- margin all 4, padding all 6 -->
+<v-btn class="mr-2 mb-3">   <!-- margin right 2, margin bottom 3 -->
+<div class="mx-auto">       <!-- margin left/right auto -->
+```
+
+#### 색상 적용
+```vue
+<!-- Vuetify 색상 시스템 사용 -->
+<v-card class="primary white--text">
+<v-btn color="secondary">
+<div class="success--text">
+```
+
+#### 반응형 처리
+```vue
+<!-- Vuetify 반응형 클래스 -->
+<v-card class="d-none d-md-block">     <!-- 모바일에서 숨김 -->
+<v-container class="px-0 px-md-4">    <!-- 모바일에서 패딩 0 -->
+```
+
+### 3. 세 번째: Nuxt/Vue 방식 활용
+
+#### CSS 변수 활용
+```vue
+<template>
+  <div class="custom-component" :class="{ 'dark-mode': $vuetify.theme.dark }">
+</template>
+
+<style scoped>
+.custom-component {
+  /* Vuetify CSS 변수 활용 */
+  background-color: var(--v-surface-base);
+  color: var(--v-on-surface-base);
+}
+
+.dark-mode {
+  /* 다크 모드 대응 */
+  background-color: var(--v-surface-darken1);
+}
+</style>
+```
+
+#### 동적 클래스 바인딩
+```vue
+<template>
+  <v-card 
+    :class="{
+      'elevation-8': isHovered,
+      'primary': isActive,
+      'ma-2': !isCompact,
+      'ma-1': isCompact
+    }"
+    @mouseenter="isHovered = true"
+    @mouseleave="isHovered = false"
+  >
+</template>
+```
+
+### 4. 최후의 수단: 커스텀 CSS 작성
+
+**커스텀 CSS를 작성하기 전 반드시 확인할 체크리스트:**
+
+#### ✅ 사전 확인사항
+1. [ ] Vuetify 컴포넌트로 해결 가능한가?
+2. [ ] Vuetify 유틸리티 클래스로 해결 가능한가?
+3. [ ] Vuetify 테마 시스템으로 해결 가능한가?
+4. [ ] CSS 변수나 동적 클래스로 해결 가능한가?
+5. [ ] 정말로 커스텀 CSS가 필요한가?
+
+#### 커스텀 CSS 작성 시 규칙
+```vue
+<style scoped>
+/* ✅ 권장: Vuetify 변수 활용 */
+.custom-element {
+  background-color: var(--v-primary-base);
+  padding: var(--v-spacing-4);
+  border-radius: var(--v-border-radius-root);
+}
+
+/* ✅ 권장: 기존 Vuetify 클래스 확장 */
+.v-card--custom {
+  transition: var(--v-transition-base);
+}
+
+/* ❌ 피해야 할 방법: 하드코딩된 값 */
+.bad-custom {
+  background: #1976d2;  /* 대신 var(--v-primary-base) 사용 */
+  padding: 16px;        /* 대신 Vuetify 스페이싱 클래스 사용 */
+}
+</style>
+```
+
+### 5. 특수 상황별 대응 방법
+
+#### 반응형 문제
+```vue
+<!-- ❌ 미디어 쿼리 직접 작성하지 말고 -->
+<style>
+@media (max-width: 768px) {
+  .container { padding: 10px; }
+}
+</style>
+
+<!-- ✅ Vuetify 반응형 클래스 활용 -->
+<template>
+  <v-container class="pa-2 pa-md-4 pa-lg-6">
+</template>
+```
+
+#### 애니메이션 문제
+```vue
+<!-- ❌ 커스텀 애니메이션 직접 작성하지 말고 -->
+<style>
+@keyframes slideIn {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+</style>
+
+<!-- ✅ Vuetify 트랜지션 활용 -->
+<template>
+  <v-slide-x-transition>
+    <v-card v-show="isVisible">
+  </v-slide-x-transition>
+</template>
+```
+
+### 6. 문제 해결 과정 가이드
+
+#### Step 1: 문제 분석
+```
+Q: 어떤 스타일링 문제인가?
+- 레이아웃 문제 → v-row, v-col 검토
+- 간격 문제 → ma-, pa- 클래스 검토  
+- 색상 문제 → Vuetify 색상 시스템 검토
+- 반응형 문제 → 브레이크포인트 클래스 검토
+```
+
+#### Step 2: Vuetify 솔루션 검색
+```vue
+<!-- 예시: 중앙 정렬 문제 -->
+<!-- 1. Vuetify 방법 먼저 시도 -->
+<v-container class="d-flex justify-center align-center fill-height">
+  <v-card>중앙에 배치될 내용</v-card>
+</v-container>
+```
+
+#### Step 3: 문서 확인
+```
+1. Vuetify 공식 문서에서 해당 컴포넌트 확인
+2. 비슷한 예제나 데모 확인
+3. 스타일링 옵션 props 확인
+```
+
+#### Step 4: 최종 확인
+```
+커스텀 CSS 작성 전 최종 질문:
+- 이 스타일이 Vuetify 디자인 시스템과 일치하는가?
+- 다크 모드에서도 문제없이 동작하는가?
+- 반응형 디자인에 문제가 없는가?
+- 유지보수가 어렵지 않은가?
+```
+
+### 7. 절대 하지 말아야 할 것들
+
+#### ❌ 금지사항
+```vue
+<!-- 1. Vuetify 클래스 오버라이드 금지 -->
+<style>
+.v-card {
+  background: red !important;  /* 절대 금지 */
+}
+</style>
+
+<!-- 2. 인라인 스타일 남용 금지 -->
+<v-card style="background: red; padding: 20px;">  <!-- 피해야 함 -->
+
+<!-- 3. 기본 HTML 태그로 Vuetify 컴포넌트 대체 금지 -->
+<div class="card-like">  <!-- v-card 사용하세요 -->
+```
+
+### 8. 올바른 문제 해결 예시
+
+#### 문제 상황: 카드 간격 조정
+```vue
+<!-- ❌ 잘못된 해결 방법 -->
+<style scoped>
+.card-container {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+.card-item {
+  flex: 1;
+  min-width: 300px;
+}
+</style>
+
+<!-- ✅ 올바른 해결 방법 -->
+<template>
+  <v-row>
+    <v-col cols="12" sm="6" md="4" v-for="card in cards" :key="card.id">
+      <v-card class="ma-2">
+        {{ card.content }}
+      </v-card>
+    </v-col>
+  </v-row>
+</template>
+```
+
+## 🎯 요약: CSS 수정 시 우선순위
+
+1. **Vuetify 컴포넌트** 사용 가능한지 확인
+2. **Vuetify 유틸리티 클래스** 활용 가능한지 확인  
+3. **Vuetify 테마/변수** 활용 가능한지 확인
+4. **Vue 동적 클래스** 바인딩으로 해결 가능한지 확인
+5. **최후의 수단으로만** 커스텀 CSS 작성
+
+유지보수 할 때, 위 방법을 꼭 숙지후에 수정하도록 해
