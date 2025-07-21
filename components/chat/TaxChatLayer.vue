@@ -121,8 +121,8 @@
           rounded
           outlined
           class="modern-input flex-grow-1 mr-2"
-          @keydown.enter.exact.prevent="onSend"
-          @keydown.enter.shift="() => {}"  
+          @keydown.enter.exact.prevent="handleEnterKey"
+          @keydown.enter.shift="handleShiftEnter"  
           aria-label="메시지 입력"
         />
         <!-- 투명도 조절 슬라이더 -->
@@ -436,6 +436,27 @@ function copyMessage(content: string) {
   }).catch(err => {
     console.error('복사 실패:', err)
   })
+}
+
+// 엔터 키 처리 함수
+function handleEnterKey(event: KeyboardEvent) {
+  // 입력이 비어있으면 전송하지 않음
+  if (!input.value.trim()) {
+    return
+  }
+  
+  // 기본 동작 방지
+  event.preventDefault()
+  
+  // 메시지 전송
+  onSend()
+}
+
+// Shift + Enter 처리 함수 (줄바꿈)
+function handleShiftEnter(event: KeyboardEvent) {
+  // Shift + Enter는 줄바꿈을 허용
+  // 기본 동작을 방지하지 않음
+  return
 }
 
 // 메시지 전송 함수

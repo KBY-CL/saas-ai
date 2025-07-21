@@ -58,14 +58,18 @@
           <div v-for="msg in messages" :key="msg.id" :class="['modern-message', msg.isUser ? 'user' : 'bot']">
             <!-- AI 메시지: 왼쪽 배치 -->
             <template v-if="!msg.isUser">
-              <div class="modern-bot-card">
+              <div class="modern-bot-card" :class="{ 'loading': msg.isLoading, 'error': msg.isError }">
                 <div class="modern-bot-icon">
-                  <v-icon color="#fff">mdi-robot</v-icon>
+                  <v-icon v-if="msg.isLoading" color="#fff" class="loading-icon">mdi-loading</v-icon>
+                  <v-icon v-else-if="msg.isError" color="#fff">mdi-alert-circle</v-icon>
+                  <v-icon v-else color="#fff">mdi-robot</v-icon>
                 </div>
                 <div class="modern-bot-content">
-                  <div class="modern-bot-text">{{ msg.content }}</div>
-                  <div class="modern-bot-divider"></div>
-                  <div class="modern-bot-bottom">
+                  <div class="modern-bot-text" :class="{ 'loading-text': msg.isLoading, 'error-text': msg.isError }">
+                    {{ msg.content }}
+                  </div>
+                  <div v-if="!msg.isLoading" class="modern-bot-divider"></div>
+                  <div v-if="!msg.isLoading" class="modern-bot-bottom">
                     <span class="modern-bot-time">{{ msg.sentAt }}</span>
                     <v-btn
                       icon
@@ -121,9 +125,10 @@
           rounded
           outlined
           class="modern-input flex-grow-1 mr-2"
-          @keydown.enter.exact.prevent="onSend"
-          @keydown.enter.shift="() => {}"  
-          aria-label="메시지 입력"
+          :disabled="isLoading"
+          @keydown.enter.exact.prevent="handleEnterKey"
+          @keydown.enter.shift="handleShiftEnter"  
+          :aria-label="isLoading ? '응답 생성 중...' : '메시지 입력'"
         />
         <!-- 투명도 조절 슬라이더 -->
         <div class="transparency-control mr-2">
@@ -155,14 +160,16 @@
           width="44"
           height="44"
           class="modern-send-btn"
-          :aria-disabled="!input.trim()"
-          :tabindex="input.trim() ? 0 : -1"
-          aria-label="전송"
-          @click="input.trim() && onSend()"
+          :disabled="!input.trim() || isLoading"
+          :aria-disabled="!input.trim() || isLoading"
+          :tabindex="input.trim() && !isLoading ? 0 : -1"
+          :aria-label="isLoading ? '응답 생성 중...' : '전송'"
+          @click="input.trim() && !isLoading && onSend()"
           @mouseenter="isSendBtnHovered = true"
           @mouseleave="isSendBtnHovered = false"
         >
-          <v-icon :color="sendBtnIconColor">mdi-send</v-icon>
+          <v-icon v-if="isLoading" color="#ccc" class="loading-icon">mdi-loading</v-icon>
+          <v-icon v-else :color="sendBtnIconColor">mdi-send</v-icon>
         </v-btn>
       </v-card-actions>
       <v-snackbar v-model="bShowCopySnackbar" color="success" :timeout="1500" location="top right">
@@ -200,7 +207,7 @@ const emit = defineEmits<{ (e: 'close'): void; (e: 'send', content: string): voi
 
 const input = ref('')
 // 메시지 타입에 sentAt 추가
-const messages = ref<{ id: string; content: string; isUser: boolean; sentAt?: string }[]>([])
+const messages = ref<{ id: string; content: string; isUser: boolean; sentAt?: string; isLoading?: boolean; isError?: boolean }[]>([])
 const bShowCopySnackbar = ref(false)
 const messagesArea = ref<HTMLElement | null>(null)
 const messageList = ref<HTMLElement | null>(null)
@@ -437,9 +444,36 @@ function copyMessage(content: string) {
   })
 }
 
+// N8N Webhook 연동
+const { sendMessage, isLoading, error, clearError } = useN8nWebhook()
+
+// 세션 ID 관리
+const sessionId = ref<string>('')
+
+// 엔터 키 처리 함수
+function handleEnterKey(event: KeyboardEvent) {
+  // 로딩 중이거나 입력이 비어있으면 전송하지 않음
+  if (isLoading.value || !input.value.trim()) {
+    return
+  }
+  
+  // 기본 동작 방지
+  event.preventDefault()
+  
+  // 메시지 전송
+  onSend()
+}
+
+// Shift + Enter 처리 함수 (줄바꿈)
+function handleShiftEnter(event: KeyboardEvent) {
+  // Shift + Enter는 줄바꿈을 허용
+  // 기본 동작을 방지하지 않음
+  return
+}
+
 // 메시지 전송 함수
-function onSend() {
-  if (!input.value.trim()) return
+async function onSend() {
+  if (!input.value.trim() || isLoading.value) return
   
   // 한국시간으로 YYYY.MM.DD HH:mm 포맷
   const now = new Date()
@@ -460,9 +494,40 @@ function onSend() {
   }
   
   messages.value.push(userMessage)
+  const userContent = input.value.trim()
+  input.value = ''
+  emit('send', userContent)
+  scrollToBottom()
   
-  // AI 응답 시뮬레이션
-  setTimeout(() => {
+  // 로딩 메시지 추가
+  const loadingMessage = {
+    id: (Date.now() + 1).toString(),
+    content: 'AI가 응답을 생성하고 있습니다...',
+    isUser: false,
+    sentAt: new Date().toLocaleString('ko-KR', { 
+      year: 'numeric', 
+      month: '2-digit', 
+      day: '2-digit',
+      hour: '2-digit', 
+      minute: '2-digit', 
+      hour12: false 
+    }),
+    isLoading: true
+  }
+  messages.value.push(loadingMessage)
+  scrollToBottom()
+  
+  try {
+    // N8N webhook으로 메시지 전송
+    const aiResponse = await sendMessage(userContent, sessionId.value)
+    
+    // 로딩 메시지 제거
+    const loadingIndex = messages.value.findIndex(msg => msg.isLoading)
+    if (loadingIndex > -1) {
+      messages.value.splice(loadingIndex, 1)
+    }
+    
+    // AI 응답 메시지 추가
     const botSentAt = new Date().toLocaleString('ko-KR', { 
       year: 'numeric', 
       month: '2-digit', 
@@ -473,18 +538,43 @@ function onSend() {
     })
     
     const aiMessage = {
-      id: (Date.now() + 1).toString(),
-      content: '위험성평가에 대한 질문을 해주셨네요. 구체적인 상황을 알려주시면 더 정확한 평가를 도와드릴 수 있습니다.',
+      id: (Date.now() + 2).toString(),
+      content: aiResponse,
       isUser: false,
       sentAt: botSentAt
     }
     messages.value.push(aiMessage)
     scrollToBottom()
-  }, 1000)
-  
-  input.value = ''
-  emit('send', userMessage.content)
-  scrollToBottom()
+    
+  } catch (err) {
+    console.error('메시지 전송 오류:', err)
+    
+    // 로딩 메시지 제거
+    const loadingIndex = messages.value.findIndex(msg => msg.isLoading)
+    if (loadingIndex > -1) {
+      messages.value.splice(loadingIndex, 1)
+    }
+    
+    // 오류 메시지 추가
+    const errorSentAt = new Date().toLocaleString('ko-KR', { 
+      year: 'numeric', 
+      month: '2-digit', 
+      day: '2-digit',
+      hour: '2-digit', 
+      minute: '2-digit', 
+      hour12: false 
+    })
+    
+    const errorMessage = {
+      id: (Date.now() + 3).toString(),
+      content: error.value || '죄송합니다. 일시적인 오류가 발생했습니다. 다시 시도해주세요.',
+      isUser: false,
+      sentAt: errorSentAt,
+      isError: true
+    }
+    messages.value.push(errorMessage)
+    scrollToBottom()
+  }
 }
 
 // 스크롤 함수
@@ -536,6 +626,9 @@ function onClose() {
 
 // 컴포넌트 마운트 시 초기화
 onMounted(() => {
+  // 세션 ID 초기화
+  sessionId.value = `risk-assessment-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+  
   // 투명도 복원
   const savedTransparency = localStorage.getItem('riskChatbotTransparency')
   if (savedTransparency !== null) {
@@ -1147,6 +1240,40 @@ onUnmounted(() => {
 .transparency-slider :deep(.v-slider__thumb) {
   width: 12px;
   height: 12px;
+}
+
+/* 로딩 및 오류 상태 스타일 */
+.modern-bot-card.loading .modern-bot-content {
+  background: #1976d2;
+  opacity: 0.8;
+}
+
+.modern-bot-card.error .modern-bot-content {
+  background: #f44336;
+}
+
+.loading-icon {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+.loading-text {
+  opacity: 0.8;
+  font-style: italic;
+}
+
+.error-text {
+  color: #fff;
+}
+
+/* 전송 버튼 비활성화 스타일 */
+.modern-send-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 /* 반응형 디자인 */
