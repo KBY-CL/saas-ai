@@ -1296,8 +1296,8 @@
                 menuContainer.innerHTML = `
                   <div class="floating-menu-root" style="width:420px; min-width:420px; max-width:420px;">
                     <div class="floating-menu-sidebar">
-                      <div class="sidebar-profile" style="cursor:pointer;">
-                        <i class="mdi mdi-account-circle" style="font-size: 36px; color: #888;"></i>
+                      <div class="sidebar-logo" style="margin-bottom:16px; display:flex; align-items:center; justify-content:center;">
+                        <img src="symbol-kosha.png" alt="logo" style="width:36px; height:36px; border-radius:8px;" />
                       </div>
                       <div class="sidebar-chat" style="margin: 8px 0; cursor:pointer; width:44px; height:44px; display:flex; align-items:center; justify-content:center;">
                         <svg width="36" height="36" viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:block;">
@@ -1308,9 +1308,6 @@
                           </defs>
                           <path d="M7 19C7 12.9249 12.4772 8 19 8C25.5228 8 31 12.9249 31 19C31 25.0751 25.5228 30 19 30C17.2222 30 15.5278 29.7222 13.9722 29.1944C13.4167 29.0139 12.8056 29.0556 12.2778 29.3056L9.5 30.6111C8.63889 31.0139 7.72222 30.1944 8.02778 29.3056L9.02778 26.4722C9.22222 25.9444 9.16667 25.3333 8.98611 24.7778C8.36111 23.2222 8 21.6389 8 20V19H7Z" fill="#555" filter="url(#chat-bubble-shadow)"/>
                         </svg>
-                      </div>
-                      <div class="sidebar-logo" style="margin-top:auto; margin-bottom:8px; display:flex; align-items:center; justify-content:center;">
-                        <img src="symbol-kosha.png" alt="logo" style="width:36px; height:36px; border-radius:8px;" />
                       </div>
                     </div>
                     <div class="floating-menu-main">
@@ -1323,8 +1320,8 @@
                           <i class="mdi mdi-window-close" style="font-size: 22px; color: #333; cursor:pointer;" onclick="window.chatbotApp.handleMinimize()"></i>
                         </div>
                       </div>
-                      ${this.bShowChatList ? `
-                        <div class="chat-list">
+                      <div style="width:100%;height:100%;display:flex;flex-direction:column;">
+                        <div class="chat-list" style="display:${this.bShowChatList ? 'flex' : 'none'};flex-direction:column;">
                           ${chatList.map(item => {
                             const config = this.getChatConfig(item.theme);
                             if (item.isExternal) {
@@ -1342,7 +1339,6 @@
                                 </div>
                               `;
                             } else {
-                              // 최소화 상태면 '대화중' 뱃지, 아니면 기존 숫자 뱃지
                               const isMinimized = this.chatLayers[item.id] && this.chatLayers[item.id].isMinimized;
                               return `
                                 <div class="chat-card" onclick="window.chatbotApp.enterChatRoom('${item.id}')">
@@ -1362,11 +1358,10 @@
                             }
                           }).join('')}
                         </div>
-                      ` : `
-                        <div class="chatbot-info-center">
+                        <div class="chatbot-info-center" style="display:${this.bShowChatList ? 'none' : 'flex'};align-items:center;justify-content:center;height:100%;min-height:320px;">
                           <div class="chatbot-info-title">스마트위험성평가 Chatbot 서비스 v2.0</div>
                         </div>
-                      `}
+                      </div>
                     </div>
                   </div>
                 `;
