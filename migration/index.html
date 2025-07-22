@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 건설안전 전문가 챗봇</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Material Design Icons CDN -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css">
+</head>
+<body>
+    <!-- 메인 컨테이너 -->
+    <div class="main-container">
+        <div class="content-area">
+            <div class="welcome-card">
+                <h1 class="welcome-title">AI 건설안전 전문가 챗봇</h1>
+                <p class="welcome-text">플로팅 메뉴가 화면 우측에 표시됩니다.</p>
+                <p class="welcome-text">각 버튼을 클릭하여 기능을 테스트해보세요.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 플로팅 메뉴 -->
+    <div id="floating-menu" class="floating-menu pill-menu">
+        <!-- 메뉴 아이템들이 JavaScript로 동적 생성됨 -->
+    </div>
+
+    <!-- 로봇 아이콘 버튼 (최소화 상태일 때) -->
+    <button id="floating-robot-btn" class="floating-robot-btn" style="display: none;">
+        <i class="mdi mdi-robot"></i>
+    </button>
+
+    <!-- 채팅 레이어들 -->
+    <div id="chat-layers-container">
+        <!-- 채팅 레이어들이 JavaScript로 동적 생성됨 -->
+    </div>
+
+    <!-- 최소화된 채팅창들 -->
+    <div id="minimized-chatbots-container">
+        <!-- 최소화된 채팅창들이 JavaScript로 동적 생성됨 -->
+    </div>
+
+    <!-- JavaScript 파일 로드 -->
+    <script src="chatbot.js"></script>
+</body>
+</html> 
