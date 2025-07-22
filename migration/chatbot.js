@@ -62,12 +62,944 @@
                 this.micPermissionGranted = true;
             }
             
+            // CSS 스타일 동적 생성
+            this.createStyles();
+            
             // 필요한 HTML 요소들 동적 생성
             this.createRequiredElements();
             
-            this.renderFloatingMenu();
+            // Material Design Icons 동적 로드
+            this.loadMaterialDesignIcons();
+            
+            // 이벤트 리스너 설정 (아이콘 로드와 무관)
             this.setupEventListeners();
-            this.updateMinimizedChatbots();
+        }
+
+        /**
+         * <pre>
+         * [Material Design Icons 동적 로드]
+         * </pre>
+         */
+        loadMaterialDesignIcons() {
+            // 이미 로드된 경우 중복 로드 방지
+            if (document.querySelector('link[href*="materialdesignicons"]')) {
+                return;
+            }
+
+            const link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.href = 'https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css';
+            link.crossOrigin = 'anonymous';
+            
+            // 로드 완료 후 콜백 실행
+            link.onload = () => {
+                console.log('Material Design Icons 로드 완료');
+                // 아이콘 로드 완료 후 UI 렌더링
+                this.renderFloatingMenu();
+                this.updateMinimizedChatbots();
+            };
+            
+            link.onerror = () => {
+                console.error('Material Design Icons 로드 실패');
+                // 로드 실패해도 기본 기능은 동작하도록
+                this.renderFloatingMenu();
+                this.updateMinimizedChatbots();
+            };
+            
+            document.head.appendChild(link);
+        }
+
+        /**
+         * <pre>
+         * [CSS 스타일 동적 생성]
+         * </pre>
+         */
+        createStyles() {
+            if (document.getElementById('chatbot-styles')) {
+                return; // 이미 생성된 경우 중복 생성 방지
+            }
+
+            const style = document.createElement('style');
+            style.id = 'chatbot-styles';
+            style.textContent = `
+                /* AI 건설안전 전문가 챗봇 - 동적 CSS 스타일 */
+
+                /* 기본 리셋 및 폰트 */
+                * {
+                    box-sizing: border-box;
+                    margin: 0;
+                    padding: 0;
+                }
+
+                body {
+                    font-family: 'Malgun Gothic', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                    line-height: 1.6;
+                    color: #212121;
+                    background-color: #f5f5f5;
+                    overflow-x: hidden;
+                }
+
+                /* 메인 컨테이너 */
+                .main-container {
+                    min-height: 100vh;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    padding: 20px;
+                }
+
+                .content-area {
+                    width: 100%;
+                    max-width: 600px;
+                }
+
+                .welcome-card {
+                    background: white;
+                    border-radius: 16px;
+                    padding: 48px;
+                    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+                    text-align: center;
+                }
+
+                .welcome-title {
+                    font-size: 28px;
+                    font-weight: 600;
+                    color: #212121;
+                    margin-bottom: 24px;
+                }
+
+                .welcome-text {
+                    font-size: 16px;
+                    color: #666;
+                    margin-bottom: 12px;
+                }
+
+                /* 플로팅 메뉴 */
+                .floating-menu.pill-menu {
+                    position: fixed;
+                    right: 32px;
+                    bottom: 32px;
+                    top: auto;
+                    transform: none;
+                    z-index: 1000;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: flex-end;
+                    background: none;
+                    box-shadow: none;
+                    border: none;
+                    min-width: 220px;
+                }
+
+                @media (max-width: 768px) {
+                    .floating-menu.pill-menu {
+                        right: 10px;
+                        bottom: 10px;
+                        min-width: 0;
+                        width: 95vw;
+                        max-width: 95vw;
+                    }
+                }
+
+                .pill-menu-btn {
+                    width: 240px;
+                    min-width: 240px;
+                    max-width: 240px;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    min-height: 48px;
+                    background: #fff;
+                    color: #222;
+                    border-radius: 999px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    font-size: 1.08rem;
+                    font-weight: 600;
+                    margin-bottom: 18px;
+                    padding: 0 22px;
+                    cursor: pointer;
+                    outline: none;
+                    border: 2px solid #222; /* 기본값, 동적으로 border-color 오버라이드 */
+                    box-shadow: none;
+                    transition: background 0.18s, color 0.18s, border 0.18s;
+                }
+
+                .pill-menu-btn:last-child {
+                    margin-bottom: 0;
+                }
+
+                .pill-menu-btn:hover, .pill-menu-btn:focus {
+                    background: #f5f5f5;
+                    color: #111;
+                    /* 테두리 색상은 인라인 스타일 유지 */
+                }
+
+                .pill-menu-label {
+                    flex: 1;
+                    text-align: left;
+                    font-size: 1.08rem;
+                    font-weight: 600;
+                    letter-spacing: 0.01em;
+                }
+
+                .pill-menu-icon {
+                    color: #222;
+                    margin-left: 16px;
+                    font-size: 24px;
+                }
+
+                .pill-minimize-btn {
+                    background: #fff !important;
+                    color: #222 !important;
+                    border-radius: 50%;
+                    box-shadow: none;
+                    margin-top: 10px;
+                    transition: background 0.18s, color 0.18s, border 0.18s;
+                    width: 48px;
+                    height: 48px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    padding: 0;
+                    border: 2px solid #222 !important;
+                    cursor: pointer;
+                }
+
+                .pill-minimize-btn:hover, .pill-minimize-btn:focus {
+                    background: #f5f5f5 !important;
+                    color: #111 !important;
+                    border: 2px solid #111 !important;
+                }
+
+                .pill-minimize-btn .mdi {
+                    color: #222 !important;
+                    font-size: 28px;
+                }
+
+                /* 로봇 아이콘 버튼 */
+                .floating-robot-btn {
+                    position: fixed;
+                    right: 32px;
+                    bottom: 32px;
+                    top: auto;
+                    transform: none;
+                    z-index: 1000;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    width: 48px;
+                    height: 48px;
+                    border-radius: 50%;
+                    background: #fff;
+                    color: #222;
+                    padding: 0;
+                    border: 2px solid #222;
+                    box-shadow: none;
+                    transition: background 0.18s, color 0.18s, border 0.18s;
+                    cursor: pointer;
+                }
+
+                .floating-robot-btn:hover, .floating-robot-btn:focus {
+                    background: #f5f5f5;
+                    color: #111;
+                    border: 2px solid #111;
+                }
+
+                .floating-robot-btn .mdi {
+                    color: #222;
+                    font-size: 2rem;
+                }
+
+                @media (max-width: 768px) {
+                    .floating-robot-btn {
+                        right: 10px;
+                        bottom: 10px;
+                    }
+                }
+
+                /* 채팅 레이어 */
+                .chat-layer {
+                    position: fixed;
+                    bottom: 24px;
+                    right: 24px;
+                    background: white;
+                    border-radius: 16px;
+                    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+                    overflow: hidden;
+                    z-index: 2000;
+                    display: none;
+                    flex-direction: column;
+                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                }
+
+                .chat-layer.show {
+                    display: flex;
+                }
+
+                .chat-layer.mini {
+                    width: 780px;
+                    height: 650px;
+                }
+
+                .chat-layer.mid {
+                    width: 1200px;
+                    height: 650px;
+                }
+
+                .chat-layer.max {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    width: 100vw;
+                    height: 100vh;
+                    border-radius: 0;
+                }
+
+                /* 채팅 헤더 */
+                .chat-header {
+                    padding: 16px;
+                    color: white;
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    min-height: 68px;
+                }
+
+                .chat-header-info {
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                }
+
+                .chat-avatar {
+                    padding: 8px;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    width: 36px;
+                    height: 36px;
+                }
+
+                .chat-title {
+                    font-size: 20px;
+                    font-weight: 600;
+                    margin: 0;
+                }
+
+                .chat-status {
+                    font-size: 14px;
+                    opacity: 0.8;
+                    margin: 0;
+                }
+
+                .chat-header-controls {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                }
+
+                .chat-header-btn {
+                    background: none;
+                    border: none;
+                    color: white;
+                    cursor: pointer;
+                    padding: 8px;
+                    border-radius: 4px;
+                    transition: background 0.2s;
+                    width: 32px;
+                    height: 32px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+
+                .chat-header-btn:hover {
+                    background: rgba(255, 255, 255, 0.1);
+                }
+
+                .chat-close-btn {
+                    background: none;
+                    border: none;
+                    color: white;
+                    cursor: pointer;
+                    padding: 8px;
+                    border-radius: 4px;
+                    transition: background 0.2s;
+                    width: 32px;
+                    height: 32px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+
+                .chat-close-btn:hover {
+                    background: rgba(255, 255, 255, 0.1);
+                }
+
+                /* 채팅 메시지 영역 */
+                .chat-messages {
+                    flex: 1;
+                    overflow-y: auto;
+                    padding: 16px;
+                    height: 500px;
+                    max-height: 500px;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 16px;
+                }
+
+                /* 메시지 스타일 */
+                .message {
+                    display: flex;
+                    align-items: flex-start;
+                    gap: 10px;
+                    max-width: 100%;
+                }
+
+                .message.bot {
+                    justify-content: flex-start;
+                }
+
+                .message.user {
+                    justify-content: flex-end;
+                    flex-direction: row-reverse;
+                }
+
+                /* 봇 메시지 */
+                .modern-bot-card {
+                    display: flex;
+                    align-items: flex-start;
+                    gap: 10px;
+                    background: transparent;
+                    border: none;
+                    max-width: 80%;
+                    min-width: 200px;
+                    box-shadow: none;
+                    overflow: hidden;
+                    justify-content: flex-start;
+                }
+
+                .modern-bot-icon {
+                    border-radius: 50%;
+                    width: 32px;
+                    height: 32px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    margin-top: 2px;
+                    flex-shrink: 0;
+                    position: relative;
+                }
+
+                .modern-bot-icon .mdi {
+                    position: absolute;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                }
+
+                .modern-bot-content {
+                    border-radius: 12px;
+                    padding: 16px 18px;
+                    position: relative;
+                    flex: 1;
+                    min-width: 150px;
+                    word-wrap: break-word;
+                    overflow-wrap: break-word;
+                    overflow-x: hidden;
+                    max-width: 80%;
+                }
+
+                .modern-bot-content::after {
+                    content: '';
+                    position: absolute;
+                    left: -8px;
+                    top: 12px;
+                    width: 0;
+                    height: 0;
+                    border-top: 8px solid transparent;
+                    border-bottom: 8px solid transparent;
+                    border-right: 8px solid;
+                }
+
+                .modern-bot-text {
+                    color: #fff;
+                    font-size: 1rem;
+                    line-height: 1.6;
+                    text-align: left;
+                    white-space: pre-line;
+                    margin-bottom: 8px;
+                    word-break: break-word;
+                    overflow-wrap: break-word;
+                }
+
+                .modern-bot-divider {
+                    width: 100%;
+                    height: 1px;
+                    background: rgba(255, 255, 255, 0.3);
+                    margin: 8px 0;
+                }
+
+                .modern-bot-bottom {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    width: 100%;
+                }
+
+                .modern-bot-time {
+                    font-size: 0.85rem;
+                    color: #fff;
+                    font-weight: 400;
+                }
+
+                .modern-copy-btn.bottom-right {
+                    position: static;
+                    background: transparent;
+                    border-radius: 50%;
+                    padding: 2px;
+                    color: #fff;
+                    border: none;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    width: 24px;
+                    height: 24px;
+                }
+
+                .modern-copy-btn.bottom-right:hover {
+                    background: rgba(255,255,255,0.1);
+                }
+
+                /* 사용자 메시지 */
+                .modern-user-card {
+                    display: flex;
+                    align-items: flex-start;
+                    gap: 10px;
+                    background: transparent;
+                    border: none;
+                    max-width: 80%;
+                    min-width: 250px;
+                    box-shadow: none;
+                    overflow: hidden;
+                    justify-content: flex-end;
+                    flex-direction: row-reverse;
+                    margin-left: auto;
+                }
+
+                .modern-user-icon {
+                    border-radius: 50%;
+                    width: 32px;
+                    height: 32px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    margin-top: 2px;
+                    flex-shrink: 0;
+                    position: relative;
+                }
+
+                .modern-user-icon .mdi {
+                    position: absolute;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                }
+
+                .modern-user-content {
+                    border-radius: 12px;
+                    padding: 16px 18px;
+                    position: relative;
+                    flex: 1;
+                    min-width: 200px;
+                    word-wrap: break-word;
+                    overflow-wrap: break-word;
+                    overflow-x: hidden;
+                    max-width: 80%;
+                }
+
+                .modern-user-content::after {
+                    content: '';
+                    position: absolute;
+                    right: -8px;
+                    top: 12px;
+                    width: 0;
+                    height: 0;
+                    border-top: 8px solid transparent;
+                    border-bottom: 8px solid transparent;
+                    border-left: 8px solid;
+                }
+
+                .modern-user-text {
+                    color: #fff;
+                    font-size: 1rem;
+                    line-height: 1.6;
+                    text-align: left;
+                    white-space: pre-line;
+                    margin-bottom: 8px;
+                    word-break: break-word;
+                    overflow-wrap: break-word;
+                }
+
+                .modern-user-divider {
+                    width: 100%;
+                    height: 1px;
+                    background: rgba(255, 255, 255, 0.3);
+                    margin: 8px 0;
+                }
+
+                .modern-user-bottom {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    width: 100%;
+                }
+
+                .modern-user-time {
+                    font-size: 0.85rem;
+                    color: #fff;
+                    font-weight: 400;
+                }
+
+                /* 하단 구분선 */
+                .modern-bottom-divider {
+                    width: 100%;
+                    height: 1px;
+                    background: #e0e0e0;
+                    margin: 0;
+                }
+
+                /* 채팅 입력 영역 */
+                .chat-input-area {
+                    padding: 8px 16px;
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    min-height: 36px;
+                    background: white;
+                }
+
+                .chat-input {
+                    flex: 1;
+                    border: 1px solid #e0e0e0;
+                    border-radius: 24px;
+                    padding: 16px 16px;
+                    font-size: 14px;
+                    resize: none;
+                    outline: none;
+                    font-family: inherit;
+                    line-height: 1.4;
+                    min-height: 44px;
+                    max-height: 120px;
+                    overflow-y: auto;
+                }
+
+                .chat-input:focus {
+                    border-color: #1976d2;
+                    box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2);
+                }
+
+                /* 투명도 조절 */
+                .transparency-control {
+                    display: flex;
+                    align-items: center;
+                    margin-right: 8px;
+                }
+
+                .transparency-slider {
+                    width: 80px;
+                    height: 4px;
+                    border-radius: 2px;
+                    background: #e0e0e0;
+                    outline: none;
+                    -webkit-appearance: none;
+                    appearance: none;
+                    cursor: pointer;
+                }
+
+                .transparency-slider::-webkit-slider-thumb {
+                    -webkit-appearance: none;
+                    appearance: none;
+                    width: 16px;
+                    height: 16px;
+                    border-radius: 50%;
+                    background: var(--slider-thumb-color, #1976d2);
+                    cursor: pointer;
+                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+                }
+
+                .transparency-slider::-moz-range-thumb {
+                    width: 16px;
+                    height: 16px;
+                    border-radius: 50%;
+                    background: var(--slider-thumb-color, #1976d2);
+                    cursor: pointer;
+                    border: none;
+                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+                }
+
+                .transparency-slider:focus {
+                    outline: none;
+                    box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2);
+                }
+
+                /* 마이크 버튼 */
+                .chat-mic-btn {
+                    background: none;
+                    border: none;
+                    cursor: pointer;
+                    padding: 8px;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    width: 44px;
+                    height: 44px;
+                    transition: background 0.2s;
+                }
+
+                .chat-mic-btn:hover {
+                    background: rgba(0, 0, 0, 0.05);
+                }
+
+                /* 전송 버튼 */
+                .chat-send-btn {
+                    background: none;
+                    border: none;
+                    cursor: pointer;
+                    padding: 8px;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    width: 44px;
+                    height: 44px;
+                    transition: background 0.2s;
+                }
+
+                .chat-send-btn:hover {
+                    background: rgba(0, 0, 0, 0.05);
+                }
+
+                .chat-send-btn:disabled {
+                    opacity: 0.5;
+                    cursor: not-allowed;
+                }
+
+                /* 최소화된 채팅창 */
+                .minimized-chatbot {
+                    position: fixed;
+                    width: 240px;
+                    min-width: 240px;
+                    max-width: 240px;
+                    height: 50px;
+                    right: 24px;
+                    bottom: 24px;
+                    display: flex !important;
+                    align-items: center;
+                    justify-content: center;
+                    background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
+                    border-radius: 12px;
+                    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+                    cursor: pointer;
+                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    backdrop-filter: blur(10px);
+                    z-index: 1000;
+                }
+
+                .minimized-chatbot:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+                }
+
+                .minimized-content {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    padding: 12px 16px;
+                    height: 100%;
+                }
+
+                .minimized-text {
+                    color: white;
+                    font-size: 14px;
+                    font-weight: 500;
+                    margin: 0 8px;
+                    flex: 1;
+                    text-align: center;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+
+                /* 알림 스타일 */
+                .chatbot-notification {
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    background: #323232;
+                    color: white;
+                    padding: 12px 24px;
+                    border-radius: 4px;
+                    font-size: 14px;
+                    z-index: 9999;
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                    animation: slideIn 0.3s ease-out;
+                }
+
+                @keyframes slideIn {
+                    from {
+                        transform: translateX(100%);
+                        opacity: 0;
+                    }
+                    to {
+                        transform: translateX(0);
+                        opacity: 1;
+                    }
+                }
+
+                /* 반응형 디자인 */
+                @media (max-width: 768px) {
+                    .chat-layer.mini {
+                        width: calc(100vw - 32px);
+                        height: calc(100vh - 100px);
+                        right: 16px;
+                        bottom: 16px;
+                    }
+                    
+                    .chat-layer.mid {
+                        width: calc(100vw - 32px);
+                        height: calc(100vh - 100px);
+                        right: 16px;
+                        bottom: 16px;
+                    }
+                    
+                    .chat-layer.max {
+                        width: 100vw;
+                        height: 100vh;
+                        right: 0;
+                        bottom: 0;
+                    }
+                    
+                    .minimized-chatbot {
+                        width: 240px;
+                        min-width: 240px;
+                        max-width: 240px;
+                        height: 50px;
+                        right: 16px;
+                        bottom: 16px;
+                    }
+                    
+                    .minimized-content {
+                        padding: 8px 12px;
+                    }
+                    
+                    .minimized-text {
+                        font-size: 12px;
+                    }
+                    
+                    .chat-input-area {
+                        padding: 4px 12px;
+                        gap: 8px;
+                    }
+                    
+                    .transparency-slider {
+                        width: 60px;
+                    }
+                }
+
+                /* 접근성 개선 */
+                @media (prefers-reduced-motion: reduce) {
+                    .chat-layer,
+                    .minimized-chatbot,
+                    .chatbot-notification {
+                        transition: none;
+                        animation: none;
+                    }
+                }
+
+                /* 고대비 모드 지원 */
+                @media (prefers-contrast: high) {
+                    .chat-input {
+                        border-width: 2px;
+                    }
+                    
+                    .modern-bot-divider,
+                    .modern-user-divider,
+                    .modern-bottom-divider {
+                        height: 2px;
+                    }
+                }
+
+                /* 다크 모드 지원 */
+                @media (prefers-color-scheme: dark) {
+                    body {
+                        background-color: #121212;
+                        color: #ffffff;
+                    }
+                    
+                    .welcome-card {
+                        background: #1e1e1e;
+                        color: #ffffff;
+                    }
+                    
+                    .chat-input {
+                        background: #2d2d2d;
+                        color: #ffffff;
+                        border-color: #404040;
+                    }
+                    
+                    .chat-input:focus {
+                        border-color: #64b5f6;
+                        box-shadow: 0 0 0 2px rgba(100, 181, 246, 0.2);
+                    }
+                }
+
+                /* 최대화 시 입력창/메시지 영역 개선 */
+                .chat-layer.max .chat-input-area {
+                    padding: 4px 8px;
+                    min-height: 32px;
+                }
+                .chat-layer.max .chat-messages {
+                    height: auto;
+                    max-height: none;
+                    flex: 1 1 0%;
+                    min-height: 0;
+                }
+
+                .minimized-close-btn {
+                    background: transparent;
+                    border: none;
+                    outline: none;
+                    cursor: pointer;
+                    margin-left: 4px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    padding: 2px;
+                    border-radius: 50%;
+                    transition: background 0.15s;
+                }
+                .minimized-close-btn .mdi {
+                    color: #fff;
+                    font-size: 16px;
+                    transition: color 0.15s;
+                }
+                .minimized-close-btn:hover, .minimized-close-btn:focus {
+                    background: rgba(255,0,0,0.08);
+                }
+                .minimized-close-btn:hover .mdi, .minimized-close-btn:focus .mdi {
+                    color: #e53935;
+                }
+            `;
+            document.head.appendChild(style);
         }
 
         /**
@@ -106,7 +1038,7 @@
                 robotBtn.id = 'floating-robot-btn';
                 robotBtn.className = 'floating-robot-btn';
                 robotBtn.style.display = 'none';
-                robotBtn.innerHTML = '<i class="mdi mdi-robot"></i>';
+                robotBtn.innerHTML = '<i class="mdi mdi-menu"></i>';
                 document.body.appendChild(robotBtn);
             }
 
@@ -139,19 +1071,22 @@
                 robotBtn.style.display = 'none';
 
                 const menuItems = [
-                    { id: 'construction-ai', label: '건설안전', icon: 'mdi-robot', action: 'construction-ai' },
-                    { id: 'risk-ai', label: '위험성평가', icon: 'mdi-shield-check', action: 'risk-ai' },
-                    { id: 'tax-ai', label: '세금계산서', icon: 'mdi-calculator', action: 'tax-ai' },
-                    { id: 'site-ai', label: '현장개통/해지', icon: 'mdi-office-building', action: 'site-ai' }
+                    { id: 'construction-ai', label: '건설안전', icon: 'mdi-robot', action: 'construction-ai', theme: 'construction-safety' },
+                    { id: 'risk-ai', label: '위험성평가', icon: 'mdi-shield-check', action: 'risk-ai', theme: 'risk-assessment' },
+                    { id: 'tax-ai', label: '세금계산서', icon: 'mdi-calculator', action: 'tax-ai', theme: 'tax-ai' },
+                    { id: 'site-ai', label: '현장개통/해지', icon: 'mdi-office-building', action: 'site-ai', theme: 'site-ai' }
                 ];
 
                 menuContainer.innerHTML = `
-                    ${menuItems.map(item => `
-                        <div class="pill-menu-btn" onclick="window.chatbotApp.handleMenuClick('${item.action}')" tabindex="0" role="button" aria-label="${item.label}">
+                    ${menuItems.map(item => {
+                        const config = this.getChatConfig(item.theme);
+                        return `
+                        <div class="pill-menu-btn" onclick="window.chatbotApp.handleMenuClick('${item.action}')" tabindex="0" role="button" aria-label="${item.label}" style="border-color: ${config.headerColor};">
                             <span class="pill-menu-label">${item.label}</span>
                             <i class="mdi ${item.icon} pill-menu-icon"></i>
                         </div>
-                    `).join('')}
+                        `;
+                    }).join('')}
                     <div class="d-flex justify-center align-center mt-4">
                         <button class="pill-minimize-btn" onclick="window.chatbotApp.handleMinimize()" aria-label="최소화">
                             <i class="mdi mdi-minus" style="font-size: 28px;"></i>
@@ -694,12 +1629,33 @@
                 <div class="minimized-content">
                     <i class="mdi mdi-robot" style="color: white; font-size: 24px;"></i>
                     <span class="minimized-text">${minimizedTitle}</span>
-                    <i class="mdi mdi-chevron-up" style="color: white; font-size: 20px;"></i>
+                    <i class="mdi mdi-chevron-up restore-btn" style="color: white; font-size: 20px; cursor:pointer;"></i>
+                    <button class="minimized-close-btn" title="닫기" tabindex="0" aria-label="닫기">
+                        <i class="mdi mdi-close"></i>
+                    </button>
                 </div>
             `;
 
-            minimizedChatbot.addEventListener('click', () => {
+            // 복원 버튼 클릭(chevron-up)
+            minimizedChatbot.querySelector('.restore-btn').addEventListener('click', (e) => {
+                e.stopPropagation();
                 this.restoreChatLayer(type);
+            });
+            // 닫기 버튼 클릭(X)
+            minimizedChatbot.querySelector('.minimized-close-btn').addEventListener('click', (e) => {
+                e.stopPropagation();
+                // 최소화 리스트에서 제거 및 DOM에서 삭제
+                const idx = this.minimizedChatbots.indexOf(type);
+                if (idx > -1) this.minimizedChatbots.splice(idx, 1);
+                minimizedChatbot.remove();
+                this.saveState();
+            });
+            // 전체 div 클릭(복원)
+            minimizedChatbot.addEventListener('click', (e) => {
+                // restore-btn, close-btn이 아닌 경우만 복원
+                if (!e.target.closest('.restore-btn') && !e.target.closest('.minimized-close-btn')) {
+                    this.restoreChatLayer(type);
+                }
             });
 
             container.appendChild(minimizedChatbot);
@@ -754,8 +1710,7 @@
         handleMinimize() {
             this.bShowFloatingMenu = false;
             this.renderFloatingMenu();
-            this.closeAllMinimizedChatbots(); // 최소화된 상담창도 모두 닫기
-            
+            // 최소화된 챗봇 버튼은 유지, closeAllMinimizedChatbots() 호출 제거
             // 모든 채팅 내역 초기화
             this.messages = {
                 'construction-safety': [],
@@ -763,7 +1718,6 @@
                 'tax-ai': [],
                 'site-ai': []
             };
-            
             // localStorage에서도 채팅 내역 제거
             this.saveState();
         }
