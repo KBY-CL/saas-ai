@@ -62,9 +62,67 @@
                 this.micPermissionGranted = true;
             }
             
+            // 필요한 HTML 요소들 동적 생성
+            this.createRequiredElements();
+            
             this.renderFloatingMenu();
             this.setupEventListeners();
             this.updateMinimizedChatbots();
+        }
+
+        /**
+         * <pre>
+         * [필요한 HTML 요소들 동적 생성]
+         * </pre>
+         */
+        createRequiredElements() {
+            // 메인 컨테이너 생성
+            if (!document.querySelector('.main-container')) {
+                const mainContainer = document.createElement('div');
+                mainContainer.className = 'main-container';
+                mainContainer.innerHTML = `
+                    <div class="content-area">
+                        <div class="welcome-card">
+                            <h1 class="welcome-title">AI 건설안전 전문가 챗봇</h1>
+                            <p class="welcome-text">플로팅 메뉴가 화면 우측에 표시됩니다.</p>
+                            <p class="welcome-text">각 버튼을 클릭하여 기능을 테스트해보세요.</p>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(mainContainer);
+            }
+
+            // 플로팅 메뉴 컨테이너 생성
+            if (!document.getElementById('floating-menu')) {
+                const floatingMenu = document.createElement('div');
+                floatingMenu.id = 'floating-menu';
+                floatingMenu.className = 'floating-menu pill-menu';
+                document.body.appendChild(floatingMenu);
+            }
+
+            // 로봇 아이콘 버튼 생성
+            if (!document.getElementById('floating-robot-btn')) {
+                const robotBtn = document.createElement('button');
+                robotBtn.id = 'floating-robot-btn';
+                robotBtn.className = 'floating-robot-btn';
+                robotBtn.style.display = 'none';
+                robotBtn.innerHTML = '<i class="mdi mdi-robot"></i>';
+                document.body.appendChild(robotBtn);
+            }
+
+            // 채팅 레이어 컨테이너 생성
+            if (!document.getElementById('chat-layers-container')) {
+                const chatLayersContainer = document.createElement('div');
+                chatLayersContainer.id = 'chat-layers-container';
+                document.body.appendChild(chatLayersContainer);
+            }
+
+            // 최소화된 채팅창 컨테이너 생성
+            if (!document.getElementById('minimized-chatbots-container')) {
+                const minimizedChatbotsContainer = document.createElement('div');
+                minimizedChatbotsContainer.id = 'minimized-chatbots-container';
+                document.body.appendChild(minimizedChatbotsContainer);
+            }
         }
 
         /**
