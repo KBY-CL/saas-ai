@@ -45,6 +45,8 @@
             this.handleSendClick = this.handleSendClick.bind(this);
             this.handleHeaderClick = this.handleHeaderClick.bind(this);
 
+            this.bShowChatList = true; // 채팅방 리스트/안내 텍스트 토글 상태
+            this.openChatRoomId = null; // 진입한 채팅방 id, null이면 전체 채팅방 리스트
             this.init();
         }
 
@@ -998,6 +1000,218 @@
                 .minimized-close-btn:hover .mdi, .minimized-close-btn:focus .mdi {
                     color: #e53935;
                 }
+
+                .pill-menu-btn.active {
+                    border-width: 2.5px;
+                    border-color: var(--active-glow, #c53030) !important;
+                }
+                .pill-menu-btn.active-glow {
+                    position: relative;
+                    background: #fff;
+                    overflow: hidden;
+                }
+                .pill-menu-btn.active-glow::before {
+                    content: '';
+                    position: absolute;
+                    inset: 0;
+                    z-index: 0;
+                    border-radius: inherit;
+                    pointer-events: none;
+                    background: radial-gradient(circle at 50% 50%, var(--active-glow, #c53030) 0%, var(--active-glow, #c53030) 40%, transparent 80%);
+                    opacity: 0.35;
+                    animation: inner-glow 1.2s ease-in-out infinite alternate;
+                }
+                @keyframes inner-glow {
+                    0% { opacity: 0.25; transform: scale(1); }
+                    100% { opacity: 0.55; transform: scale(1.25); }
+                }
+                .pill-menu-btn.active-glow > * {
+                    position: relative;
+                    z-index: 1;
+                }
+                .pill-menu-btn.active-bounce {
+                    /* 바운스 효과 제거 */
+                 }
+
+                .floating-menu-list {
+                    display: flex;
+                    flex-direction: column;
+                    width: 100%;
+                }
+                .floating-menu-card {
+                    transition: box-shadow 0.18s, transform 0.18s;
+                }
+                .floating-menu-card:hover, .floating-menu-card:focus {
+                    box-shadow: 0 4px 16px rgba(0,0,0,0.16);
+                    transform: translateY(-2px) scale(1.03);
+                }
+
+                .floating-menu-root {
+                    display: flex;
+                    flex-direction: row;
+                    background: #f5f6fa;
+                    border-radius: 16px;
+                    box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+                    min-width: 380px;
+                    overflow: hidden;
+                }
+                .floating-menu-sidebar {
+                    width: 56px;
+                    background: #ececec;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    padding: 12px 0;
+                    border-right: 1.5px solid #e0e0e0;
+                    height: auto;
+                }
+                .floating-menu-main {
+                    flex: 1;
+                    display: flex;
+                    flex-direction: column;
+                    min-width: 0;
+                    height: auto;
+                }
+                .floating-menu-header {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    background: #fff;
+                    padding: 12px 18px 12px 18px;
+                    border-bottom: 1.5px solid #e0e0e0;
+                }
+                .header-title {
+                    font-size: 20px;
+                    font-weight: 700;
+                    color: #222;
+                }
+                .header-icons {
+                    display: flex;
+                    align-items: center;
+                }
+                .chat-list {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 0;
+                    padding: 0;
+                    height: auto;
+                    max-height: none;
+                    overflow: visible;
+                }
+                .chat-card {
+                    display: flex;
+                    align-items: center;
+                    background: #fff;
+                    border-radius: 0;
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+                    padding: 12px 16px;
+                    cursor: pointer;
+                    transition: box-shadow 0.18s, transform 0.18s, background 0.18s;
+                    position: relative;
+                    min-width: 220px;
+                }
+                .chat-card:hover, .chat-card:focus {
+                    box-shadow: 0 4px 16px rgba(0,0,0,0.16);
+                    background: #ececec;
+                    transform: translateY(-2px) scale(1.02);
+                }
+                .chat-avatar {
+                    width: 40px;
+                    height: 40px;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    margin-right: 14px;
+                    flex-shrink: 0;
+                }
+                .chat-info {
+                    flex: 1;
+                    min-width: 0;
+                }
+                .chat-title-row {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    margin-bottom: 2px;
+                }
+                .chat-title {
+                    font-size: 16px;
+                    font-weight: 600;
+                    color: #222;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+                .chat-time {
+                    font-size: 13px;
+                    color: #888;
+                    margin-left: 8px;
+                    flex-shrink: 0;
+                }
+                .chat-preview {
+                    font-size: 14px;
+                    color: #555;
+                    opacity: 0.85;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+                .chat-badge {
+                    background: #e53935;
+                    color: #fff;
+                    font-size: 13px;
+                    font-weight: 700;
+                    border-radius: 12px;
+                    min-width: 22px;
+                    height: 22px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    position: absolute;
+                    right: 16px;
+                    bottom: 14px;
+                    padding: 0 6px;
+                    box-shadow: 0 1px 4px rgba(229,57,53,0.12);
+                }
+                .header-minimize-btn {
+                    background: transparent;
+                    border: none;
+                    border-radius: 0;
+                    width: 32px;
+                    height: 32px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    margin-right: 8px;
+                    cursor: pointer;
+                    box-shadow: none;
+                }
+                .header-minimize-btn:hover, .header-minimize-btn:focus {
+                    background: transparent;
+                    box-shadow: none;
+                }
+
+                .chatbot-info-center {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    height: 100%;
+                    min-height: 320px;
+                }
+                .chatbot-info-title {
+                    font-size: 18px;
+                    font-weight: 600;
+                    color: #1976d2;
+                    text-align: center;
+                }
+                .floating-menu-bottom {
+                    padding: 12px 12px 0 12px;
+                    background: transparent;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
             `;
             document.head.appendChild(style);
         }
@@ -1066,36 +1280,129 @@
             const menuContainer = document.getElementById('floating-menu');
             const robotBtn = document.getElementById('floating-robot-btn');
 
-            if (this.bShowFloatingMenu) {
+            if (this.bShowFloatingMenu && this.openChatRoomId === null) {
                 menuContainer.style.display = 'flex';
                 robotBtn.style.display = 'none';
 
-                const menuItems = [
-                    { id: 'construction-ai', label: '건설안전', icon: 'mdi-robot', action: 'construction-ai', theme: 'construction-safety' },
-                    { id: 'risk-ai', label: '위험성평가', icon: 'mdi-shield-check', action: 'risk-ai', theme: 'risk-assessment' },
-                    { id: 'tax-ai', label: '세금계산서', icon: 'mdi-calculator', action: 'tax-ai', theme: 'tax-ai' },
-                    { id: 'site-ai', label: '현장개통/해지', icon: 'mdi-office-building', action: 'site-ai', theme: 'site-ai' }
+                // 샘플 미리보기/시간/뱃지 데이터
+                const chatList = [
+                  { id: 'construction-safety', label: '건설안전 A.I', icon: 'mdi-robot', theme: 'construction-safety', preview: '안전 및 대책 관련 문의', time: '오후 4:47', badge: 1 },
+                  { id: 'risk-assessment', label: '위험성평가 A.I', icon: 'mdi-shield-check', theme: 'risk-assessment', preview: '시스템사용방법 관련 문의', time: '오후 4:40', badge: 0 },
+                  { id: 'tax-ai', label: '세금계산서 A.I', icon: 'mdi-calculator', theme: 'tax-ai', preview: '세금계산서 관련 문의', time: '오후 4:14', badge: 2 },
+                  { id: 'site-ai', label: '현장개통/해지 A.I', icon: 'mdi-office-building', theme: 'site-ai', preview: '현장개통/해지 안내', time: '오후 4:10', badge: 0 },
+                  { id: 'kakao-link', label: '카카오톡 상담', icon: 'mdi-message-text', theme: 'risk-assessment', preview: '카카오톡으로 바로 상담하기', time: '', badge: 0, isExternal: true, link: 'https://pf.kakao.com/_cxcxdxfs/chat' }
                 ];
 
                 menuContainer.innerHTML = `
-                    ${menuItems.map(item => {
-                        const config = this.getChatConfig(item.theme);
-                        return `
-                        <div class="pill-menu-btn" onclick="window.chatbotApp.handleMenuClick('${item.action}')" tabindex="0" role="button" aria-label="${item.label}" style="border-color: ${config.headerColor};">
-                            <span class="pill-menu-label">${item.label}</span>
-                            <i class="mdi ${item.icon} pill-menu-icon"></i>
-                        </div>
-                        `;
-                    }).join('')}
-                    <div class="d-flex justify-center align-center mt-4">
-                        <button class="pill-minimize-btn" onclick="window.chatbotApp.handleMinimize()" aria-label="최소화">
-                            <i class="mdi mdi-minus" style="font-size: 28px;"></i>
-                        </button>
+                  <div class="floating-menu-root" style="width:420px; min-width:420px; max-width:420px;">
+                    <div class="floating-menu-sidebar">
+                      <div class="sidebar-profile" style="cursor:pointer;">
+                        <i class="mdi mdi-account-circle" style="font-size: 36px; color: #888;"></i>
+                      </div>
+                      <div class="sidebar-chat" style="margin: 8px 0; cursor:pointer; width:44px; height:44px; display:flex; align-items:center; justify-content:center;">
+                        <svg width="36" height="36" viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:block;">
+                          <defs>
+                            <filter id="chat-bubble-shadow" x="0" y="0" width="38" height="38" filterUnits="userSpaceOnUse">
+                              <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#bbb" flood-opacity="0.25"/>
+                            </filter>
+                          </defs>
+                          <path d="M7 19C7 12.9249 12.4772 8 19 8C25.5228 8 31 12.9249 31 19C31 25.0751 25.5228 30 19 30C17.2222 30 15.5278 29.7222 13.9722 29.1944C13.4167 29.0139 12.8056 29.0556 12.2778 29.3056L9.5 30.6111C8.63889 31.0139 7.72222 30.1944 8.02778 29.3056L9.02778 26.4722C9.22222 25.9444 9.16667 25.3333 8.98611 24.7778C8.36111 23.2222 8 21.6389 8 20V19H7Z" fill="#555" filter="url(#chat-bubble-shadow)"/>
+                        </svg>
+                      </div>
+                      <div class="sidebar-logo" style="margin-top:auto; margin-bottom:8px; display:flex; align-items:center; justify-content:center;">
+                        <img src="symbol-kosha.png" alt="logo" style="width:36px; height:36px; border-radius:8px;" />
+                      </div>
                     </div>
+                    <div class="floating-menu-main">
+                      <div class="floating-menu-header">
+                        <span class="header-title">채팅</span>
+                        <div class="header-icons">
+                          <button class="header-minimize-btn" onclick="window.chatbotApp.handleMinimize()" aria-label="최소화">
+                            <i class="mdi mdi-minus" style="font-size: 22px; color: #333;"></i>
+                          </button>
+                          <i class="mdi mdi-window-close" style="font-size: 22px; color: #333; cursor:pointer;" onclick="window.chatbotApp.handleMinimize()"></i>
+                        </div>
+                      </div>
+                      ${this.bShowChatList ? `
+                        <div class="chat-list">
+                          ${chatList.map(item => {
+                            const config = this.getChatConfig(item.theme);
+                            if (item.isExternal) {
+                              return `
+                                <div class="chat-card" onclick="window.open('${item.link}', '_blank')">
+                                  <div class="chat-avatar" style="background:${config.headerColor};">
+                                    <i class="mdi ${item.icon}" style="font-size: 22px; color: #fff;"></i>
+                                  </div>
+                                  <div class="chat-info">
+                                    <div class="chat-title-row">
+                                      <span class="chat-title">${item.label}</span>
+                                    </div>
+                                    <div class="chat-preview">${item.preview}</div>
+                                  </div>
+                                </div>
+                              `;
+                            } else {
+                              // 최소화 상태면 '대화중' 뱃지, 아니면 기존 숫자 뱃지
+                              const isMinimized = this.chatLayers[item.id] && this.chatLayers[item.id].isMinimized;
+                              return `
+                                <div class="chat-card" onclick="window.chatbotApp.enterChatRoom('${item.id}')">
+                                  <div class="chat-avatar" style="background:${config.headerColor};">
+                                    <i class="mdi ${item.icon}" style="font-size: 22px; color: #fff;"></i>
+                                  </div>
+                                  <div class="chat-info">
+                                    <div class="chat-title-row">
+                                      <span class="chat-title">${item.label}</span>
+                                      <span class="chat-time">${item.time}</span>
+                                    </div>
+                                    <div class="chat-preview">${item.preview}</div>
+                                  </div>
+                                  ${isMinimized ? `<div class="chat-badge" style="background:#1976d2;">대화중</div>` : ''}
+                                </div>
+                              `;
+                            }
+                          }).join('')}
+                        </div>
+                      ` : `
+                        <div class="chatbot-info-center">
+                          <div class="chatbot-info-title">스마트위험성평가 Chatbot 서비스 v2.0</div>
+                        </div>
+                      `}
+                    </div>
+                  </div>
                 `;
+
+                // 사이드바 아이콘 클릭 이벤트 바인딩
+                const sidebarProfile = menuContainer.querySelector('.sidebar-profile');
+                if (sidebarProfile) {
+                  sidebarProfile.onclick = () => { this.bShowChatList = false; this.renderFloatingMenu(); };
+                }
+                const sidebarChat = menuContainer.querySelector('.sidebar-chat');
+                if (sidebarChat) {
+                  sidebarChat.onclick = () => { this.bShowChatList = true; this.renderFloatingMenu(); };
+                }
+            } else if (this.openChatRoomId) {
+                // 플로팅 메뉴 숨기고 채팅 레이어만 표시
+                menuContainer.style.display = 'none';
+                robotBtn.style.display = 'none';
+                // 채팅 레이어는 enterChatRoom에서 이미 생성됨
+                return;
             } else {
                 menuContainer.style.display = 'none';
+                // 플로팅 메뉴가 최소화되면 + 버튼(동그라미 안에 +)을 보이게
+                robotBtn.innerHTML = '<i class="mdi mdi-plus" style="font-size: 28px;"></i>';
                 robotBtn.style.display = 'flex';
+                robotBtn.style.background = '#fff';
+                robotBtn.style.border = '2px solid #1976d2';
+                robotBtn.style.color = '#1976d2';
+                robotBtn.style.boxShadow = '0 2px 8px rgba(25,118,210,0.10)';
+                robotBtn.style.width = '56px';
+                robotBtn.style.height = '56px';
+                robotBtn.style.borderRadius = '50%';
+                robotBtn.style.alignItems = 'center';
+                robotBtn.style.justifyContent = 'center';
+                robotBtn.style.right = '32px';
+                robotBtn.style.bottom = '32px';
+                robotBtn.style.position = 'fixed';
             }
         }
 
@@ -1450,7 +1757,7 @@
             } else if (type === 'risk-assessment') {
                 response = `안녕하세요! 위험성평가 전문가입니다.\n\n작업장소와 작업공종을 알려주시면 해당 작업의 위험요인을 분석하고 평가 방법을 안내해드리겠습니다.\n\n위험성평가는 작업 전 필수 절차로, 안전한 작업 환경을 조성하는 데 중요한 역할을 합니다.`;
             } else if (type === 'tax-ai') {
-                response = `안녕하세요! 세금계산서 A.I입니다.\n\n세금계산서 작성과 관련된 질문을 해주세요. 부가가치세, 소득세, 법인세 등 다양한 세무 업무를 도와드릴 수 있습니다.\n\n구체적인 상황을 알려주시면 더 정확한 안내를 제공해드리겠습니다.`;
+                response = `안녕하세요! 세금계산서 A.I입니다.\n\n세금계산서 작성과 관련된 질문을 해주세요. 부가가치세, 소득세, 법인세 등 다양한 세무 업무를 도와드릴 수 있습니다.\n\n구체적인 상황을 알려주시면 더 정확한 안내를 제공해드리겠습니다.'`;
             } else if (type === 'site-ai') {
                 response = `안녕하세요! 현장개통/해지 전문가입니다.\n\n현장개통과 해지 절차에 대해 안내해드리겠습니다.\n\n현장개통은 새로운 건설현장을 시작할 때 필요한 절차이며, 해지는 작업 완료 후 현장을 정리하는 절차입니다.\n\n어떤 부분에 대해 궁금하신가요?`;
             }
@@ -1507,6 +1814,12 @@
             
             this.updateMinimizedChatbots();
             this.saveState();
+            this.renderFloatingMenu();
+            // 채팅방 닫기 시 전체 채팅방 리스트로 복귀
+            if (this.openChatRoomId === type) {
+                this.openChatRoomId = null;
+                this.renderFloatingMenu();
+            }
         }
 
         /**
@@ -1550,6 +1863,12 @@
             
             this.updateMinimizedChatbots();
             this.saveState();
+            this.renderFloatingMenu();
+            // 채팅방 닫기 시 전체 채팅방 리스트로 복귀
+            if (this.openChatRoomId === type) {
+                this.openChatRoomId = null;
+                this.renderFloatingMenu();
+            }
         }
 
         /**
@@ -1689,6 +2008,7 @@
             this.createChatLayer(type);
             this.updateMinimizedChatbots();
             this.saveState();
+            this.renderFloatingMenu();
         }
 
         /**
@@ -1803,12 +2123,9 @@
          * </pre>
          */
         updateMinimizedChatbots() {
+            // 최소화된 챗봇 박스는 더 이상 생성하지 않음
             const container = document.getElementById('minimized-chatbots-container');
-            container.innerHTML = '';
-            
-            this.minimizedChatbots.forEach((type, index) => {
-                this.createMinimizedChatbot(type);
-            });
+            if (container) container.innerHTML = '';
         }
 
         /**
@@ -2160,6 +2477,18 @@
                     }
                 }
             }
+        }
+
+        /**
+         * <pre>
+         * [채팅방 진입]
+         * </pre>
+         * @param {string} id 채팅방 id
+         */
+        enterChatRoom(id) {
+            this.openChatRoomId = id;
+            this.createChatLayer(id); // 채팅 레이어를 즉시 생성
+            this.renderFloatingMenu();
         }
     }
 
