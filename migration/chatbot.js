@@ -1569,9 +1569,7 @@
                                         </button>
                                     </div>
                                 </div>
-                                ${(type === 'construction-safety' || type === 'risk-assessment') ? `<div style="font-size: 11px; color: ${config.botMessageColor}; margin-top: 8px; text-align: right; opacity: 0.8;">
-                                    ※답변에 대해 점수를 피드백해주세요. 더 좋은 답변을 위해 노력하겠습니다.
-                                </div>` : ''}
+
                             </div>
                         </div>
                         `;
@@ -1579,23 +1577,17 @@
                 }
             } else {
                 // welcome message만 표시
+                const welcomeText = type === 'tax-ai' ? '안녕하세요! 세금계산서 A.I입니다.\n\n어떤 세무 업무에 대해 도움이 필요하신가요?\n아래 버튼을 클릭하여 선택해주세요.\n\n' : config.welcomeMessage;
+                
                 messagesHTML = `
                     <div class="message bot">
                         <div class="modern-bot-icon" style="background: ${config.botMessageColor};">
                             <i class="mdi mdi-robot" style="color: white; font-size: 20px;"></i>
                         </div>
                         <div class="modern-bot-content" style="border: 1.5px solid ${config.botMessageColor}; background-color: ${config.botMessageColor === '#dc3545' ? '#fff0f0' : config.botMessageColor === '#1976d2' ? '#e3f2fd' : config.botMessageColor === '#4caf50' ? '#f1f8e9' : config.botMessageColor === '#fee500' ? '#fff9c4' : '#fff0f0'};">
-                            <div class="modern-bot-text">${config.welcomeMessage}</div>
-                            <div class="modern-bot-divider" style="background: ${config.botMessageColor};"></div>
-                            <div class="modern-bot-bottom">
-                                <span class="modern-bot-time">${this.getCurrentTime()}</span>
-                                <button class="modern-copy-btn bottom-right" onclick="window.chatbotApp.copyToClipboard('${config.welcomeMessage.replace(/'/g, "\\'")}')" aria-label="메시지 복사">
-                                    <i class="mdi mdi-content-copy" style="font-size: 16px; color: ${config.botMessageColor};"></i>
-                                </button>
-                            </div>
-                            ${(type === 'construction-safety' || type === 'risk-assessment') ? `<div style="font-size: 11px; color: ${config.botMessageColor}; margin-top: 8px; text-align: right; opacity: 0.8;">
-                                ※답변에 대해 점수를 피드백해주세요. 더 좋은 답변을 위해 노력하겠습니다.
-                            </div>` : ''}
+                            <div class="modern-bot-text">${welcomeText}</div>
+                            ${type === 'tax-ai' ? this.createTaxButtonsHTML() : ''}
+
                         </div>
                     </div>
                 `;
@@ -1631,6 +1623,24 @@
                     ${messagesHTML}
                 </div>
                 <div class="modern-bottom-divider"></div>
+                ${(type === 'tax-ai' || type === 'site-ai') ? `
+                <div class="chat-input-area" style="opacity: 0.5; pointer-events: none;">
+                    <textarea class="chat-input" placeholder="입력이 비활성화되었습니다" rows="1" disabled></textarea>
+                    <div class="transparency-control">
+                        <input type="range" min="90" max="100" value="${this.transparency[type]}" 
+                               class="transparency-slider" 
+                               onchange="window.chatbotApp.updateTransparency('${type}', this.value)"
+                               oninput="window.chatbotApp.updateTransparency('${type}', this.value)"
+                               style="width: 80px; ${sliderStyle}">
+                    </div>
+                    <button class="chat-mic-btn" disabled aria-label="음성 입력">
+                        <i class="mdi mdi-microphone-outline" style="font-size: 26px; color: #ccc;"></i>
+                    </button>
+                    <button class="chat-send-btn" disabled aria-label="전송">
+                        <i class="mdi mdi-send" style="font-size: 20px; color: #ccc;"></i>
+                    </button>
+                </div>
+                ` : `
                 <div class="chat-input-area">
                     <textarea class="chat-input" placeholder="${config.placeholder}" rows="1"></textarea>
                     <div class="transparency-control">
@@ -1647,6 +1657,7 @@
                         <i class="mdi mdi-send" style="font-size: 20px; color: ${config.headerColor};"></i>
                     </button>
                 </div>
+                `}
             `;
 
             container.appendChild(chatLayer);
@@ -1698,7 +1709,7 @@
                     botMessageColor: '#ff8f00',
                     userMessageColor: '#4caf50',
                     placeholder: '세금계산서에 대해 궁금한 것을 물어보세요...',
-                    welcomeMessage: '안녕하세요? 저는 세금계산서 A.I입니다.\n\n세금계산서 작성과 관련된 질문을 해주세요. 부가가치세, 소득세, 법인세 등 다양한 세무 업무를 도와드릴 수 있습니다.\n\n구체적인 상황을 알려주시면 더 정확한 안내를 제공해드리겠습니다.'
+                    welcomeMessage: ''
                 },
                 'site-ai': {
                     title: '현장개통/해지 전문가',
@@ -1761,6 +1772,11 @@
         sendMessage(type) {
             const chatLayer = document.querySelector(`[data-chat-type="${type}"]`);
             if (!chatLayer) return;
+
+            // 세금계산서와 현장개통 채팅방에서는 메시지 전송 비활성화
+            if (type === 'tax-ai' || type === 'site-ai') {
+                return;
+            }
 
             const input = chatLayer.querySelector('.chat-input');
             const messagesContainer = chatLayer.querySelector('.chat-messages');
@@ -1830,7 +1846,7 @@
             } else if (type === 'risk-assessment') {
                 response = `안녕하세요! 위험성평가 전문가입니다.\n\n작업장소와 작업공종을 알려주시면 해당 작업의 위험요인을 분석하고 평가 방법을 안내해드리겠습니다.\n\n위험성평가는 작업 전 필수 절차로, 안전한 작업 환경을 조성하는 데 중요한 역할을 합니다.`;
             } else if (type === 'tax-ai') {
-                response = `안녕하세요! 세금계산서 A.I입니다.\n\n세금계산서 작성과 관련된 질문을 해주세요. 부가가치세, 소득세, 법인세 등 다양한 세무 업무를 도와드릴 수 있습니다.\n\n구체적인 상황을 알려주시면 더 정확한 안내를 제공해드리겠습니다.'`;
+                response = `안녕하세요! 세금계산서 A.I입니다.\n\n어떤 세무 업무에 대해 도움이 필요하신가요? 아래 버튼을 클릭하여 선택해주세요.`;
             } else if (type === 'site-ai') {
                 response = `안녕하세요! 현장개통/해지 전문가입니다.\n\n현장개통과 해지 절차에 대해 안내해드리겠습니다.\n\n현장개통은 새로운 건설현장을 시작할 때 필요한 절차이며, 해지는 작업 완료 후 현장을 정리하는 절차입니다.\n\n어떤 부분에 대해 궁금하신가요?`;
             } else if (type === 'kakao') {
@@ -1853,19 +1869,19 @@
                 </div>
                 <div class="modern-bot-content" style="border: 1.5px solid ${config.botMessageColor}; background-color: ${config.botMessageColor === '#dc3545' ? '#fff0f0' : config.botMessageColor === '#1976d2' ? '#e3f2fd' : config.botMessageColor === '#4caf50' ? '#f1f8e9' : config.botMessageColor === '#fee500' ? '#fff9c4' : '#fff0f0'};">
                     <div class="modern-bot-text">${response}</div>
-                    <div class="modern-bot-divider" style="background: ${config.botMessageColor};"></div>
-                    <div class="modern-bot-bottom">
-                        <span class="modern-bot-time">${this.getCurrentTime()}</span>
-                        <div style="display: flex; align-items: center;">
-                            ${ratingHTML}
-                            <button class="modern-copy-btn bottom-right" onclick="window.chatbotApp.copyToClipboard('${response.replace(/'/g, "\\'")}')" aria-label="메시지 복사">
-                                <i class="mdi mdi-content-copy" style="font-size: 16px; color: ${config.botMessageColor};"></i>
-                            </button>
+                    ${type === 'tax-ai' ? this.createTaxButtonsHTML() : ''}
+                    ${type !== 'tax-ai' ? `
+                        <div class="modern-bot-divider" style="background: ${config.botMessageColor};"></div>
+                        <div class="modern-bot-bottom">
+                            <span class="modern-bot-time">${this.getCurrentTime()}</span>
+                            <div style="display: flex; align-items: center;">
+                                ${ratingHTML}
+                                <button class="modern-copy-btn bottom-right" onclick="window.chatbotApp.copyToClipboard('${response.replace(/'/g, "\\'")}')" aria-label="메시지 복사">
+                                    <i class="mdi mdi-content-copy" style="font-size: 16px; color: ${config.botMessageColor};"></i>
+                                </button>
+                            </div>
                         </div>
-                    </div>
-                    ${(type === 'construction-safety' || type === 'risk-assessment') ? `<div style="font-size: 11px; color: ${config.botMessageColor}; margin-top: 8px; text-align: right; opacity: 0.8;">
-                        ※답변에 대해 점수를 피드백해주세요. 더 좋은 답변을 위해 노력하겠습니다.
-                    </div>` : ''}
+                    ` : ''}
                 </div>
             `;
             messagesContainer.appendChild(botMessage);
@@ -2551,6 +2567,10 @@
                 const chatLayer = event.target.closest('.chat-layer');
                 if (chatLayer) {
                     const type = chatLayer.getAttribute('data-chat-type');
+                    // 세금계산서와 현장개통 채팅방에서는 Enter 키 입력 비활성화
+                    if (type === 'tax-ai' || type === 'site-ai') {
+                        return;
+                    }
                     this.sendMessage(type);
                 }
             }
@@ -2560,6 +2580,10 @@
             const chatLayer = event.target.closest('.chat-layer');
             if (chatLayer) {
                 const type = chatLayer.getAttribute('data-chat-type');
+                // 세금계산서와 현장개통 채팅방에서는 전송 버튼 클릭 비활성화
+                if (type === 'tax-ai' || type === 'site-ai') {
+                    return;
+                }
                 this.sendMessage(type);
             }
         }
@@ -2799,6 +2823,158 @@
                 .modern-star-btn[data-theme="risk-assessment"].rated .mdi {
                     color: #1976d2 !important;
                 }
+
+                /* 세금계산서 버튼 스타일 */
+                .tax-button-container {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 8px;
+                    margin-top: 12px;
+                }
+
+                .tax-button {
+                    background: #ff8f00;
+                    color: white;
+                    border: none;
+                    border-radius: 8px;
+                    padding: 12px 16px;
+                    font-size: 14px;
+                    font-weight: 500;
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+                    text-align: left;
+                    width: 100%;
+                }
+
+                .tax-button:hover {
+                    background: #e67e00;
+                    transform: translateY(-1px);
+                    box-shadow: 0 4px 12px rgba(255, 143, 0, 0.3);
+                }
+
+                .tax-button:active {
+                    transform: translateY(0);
+                }
+
+                /* 세금계산서 발행 폼 스타일 */
+                .tax-form-container {
+                    margin-top: 16px;
+                }
+
+                .tax-form {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 16px;
+                }
+
+                .form-group {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 8px;
+                }
+
+                .form-group label {
+                    font-weight: 600;
+                    color: #333;
+                    font-size: 14px;
+                }
+
+                .form-group input,
+                .form-group textarea {
+                    padding: 12px;
+                    border: 1px solid #ddd;
+                    border-radius: 6px;
+                    font-size: 14px;
+                    transition: border-color 0.2s ease;
+                }
+
+                .form-group input:focus,
+                .form-group textarea:focus {
+                    outline: none;
+                    border-color: #ff8f00;
+                    box-shadow: 0 0 0 2px rgba(255, 143, 0, 0.1);
+                }
+
+                .radio-group {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 8px;
+                }
+
+                .radio-label {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    cursor: pointer;
+                    padding: 8px;
+                    border-radius: 4px;
+                    transition: background-color 0.2s ease;
+                }
+
+                .radio-label:hover {
+                    background-color: #f5f5f5;
+                }
+
+                .radio-label input[type="radio"] {
+                    margin: 0;
+                }
+
+                .radio-label span {
+                    font-size: 14px;
+                    color: #333;
+                }
+
+                .form-submit {
+                    margin-top: 8px;
+                }
+
+                .button-group {
+                    display: flex;
+                    gap: 12px;
+                }
+
+                .submit-btn,
+                .cancel-btn {
+                    flex: 1;
+                    padding: 12px 24px;
+                    font-size: 14px;
+                    font-weight: 600;
+                    cursor: pointer;
+                    border: none;
+                    border-radius: 6px;
+                    transition: all 0.2s ease;
+                }
+
+                .submit-btn {
+                    background: #ff8f00;
+                    color: white;
+                }
+
+                .submit-btn:hover {
+                    background: #e67e00;
+                    transform: translateY(-1px);
+                    box-shadow: 0 4px 12px rgba(255, 143, 0, 0.3);
+                }
+
+                .submit-btn:active {
+                    transform: translateY(0);
+                }
+
+                .cancel-btn {
+                    background: #f5f5f5;
+                    color: #666;
+                    border: 1px solid #ddd;
+                }
+
+                .cancel-btn:hover {
+                    background: #e8e8e8;
+                    transform: translateY(-1px);
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+                }
+
+                .cancel-btn:active {
+                    transform: translateY(0);
+                }
             `;
             
             existingStyle.textContent += ratingStyles;
@@ -2861,6 +3037,352 @@
                 (G < 255 ? G < 1 ? 0 : G : 255) * 0x100 +
                 (B < 255 ? B < 1 ? 0 : B : 255)).toString(16).slice(1);
         }
+
+        /**
+         * <pre>
+         * [세금계산서 버튼 HTML 생성]
+         * </pre>
+         * 
+         * @returns {string} 세금계산서 버튼 HTML
+         */
+        createTaxButtonsHTML() {
+            return `
+                <div class="tax-button-container">
+                    <button class="tax-button" onclick="window.chatbotApp.handleTaxButtonClick('세금계산서발행')">
+                        📄 세금계산서 발행
+                    </button>
+                    <button class="tax-button" onclick="window.chatbotApp.handleTaxButtonClick('세금계산서조회')">
+                        🔍 세금계산서 조회
+                    </button>
+                    <br>
+                </div>
+            `;
+        }
+
+        /**
+         * <pre>
+         * [세금계산서 버튼 클릭 처리]
+         * </pre>
+         * 
+         * @param {string} buttonType 버튼 타입
+         */
+        handleTaxButtonClick(buttonType) {
+            const chatLayer = document.querySelector('[data-chat-type="tax-ai"]');
+            if (!chatLayer) return;
+
+            if (buttonType === '세금계산서발행') {
+                // 세금계산서 발행 폼 메시지 표시
+                const messagesContainer = chatLayer.querySelector('.chat-messages');
+                const config = this.getChatConfig('tax-ai');
+                
+                const formMessage = document.createElement('div');
+                formMessage.className = 'message bot';
+                formMessage.innerHTML = `
+                    <div class="modern-bot-icon" style="background: ${config.botMessageColor};">
+                        <i class="mdi mdi-robot" style="color: white; font-size: 20px;"></i>
+                    </div>
+                    <div class="modern-bot-content" style="border: 1.5px solid ${config.botMessageColor}; background-color: #fff0f0;">
+                        <div class="modern-bot-text">
+                            세금계산서 발행을 위해 아래 정보를 입력해주세요.
+                        </div>
+                        ${this.createTaxInvoiceFormHTML()}
+                    </div>
+                `;
+                messagesContainer.appendChild(formMessage);
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            } else if (buttonType === '세금계산서조회') {
+                // 세금계산서 조회 폼 메시지 표시
+                const messagesContainer = chatLayer.querySelector('.chat-messages');
+                const config = this.getChatConfig('tax-ai');
+                
+                const formMessage = document.createElement('div');
+                formMessage.className = 'message bot';
+                formMessage.innerHTML = `
+                    <div class="modern-bot-icon" style="background: ${config.botMessageColor};">
+                        <i class="mdi mdi-robot" style="color: white; font-size: 20px;"></i>
+                    </div>
+                    <div class="modern-bot-content" style="border: 1.5px solid ${config.botMessageColor}; background-color: #fff0f0;">
+                        <div class="modern-bot-text">
+                            세금계산서 발행시 발급된 접수번호를 입력해주세요.
+                        </div>
+                        ${this.createTaxInvoiceSearchFormHTML()}
+                    </div>
+                `;
+                messagesContainer.appendChild(formMessage);
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            } else {
+                // 기존 방식으로 처리 (기타 버튼들)
+                const input = chatLayer.querySelector('.chat-input');
+                if (!input) return;
+
+                let message = `${buttonType}에 대해 알려주세요.`;
+                input.value = message;
+                input.focus();
+                
+                // 자동으로 메시지 전송
+                setTimeout(() => {
+                    this.sendMessage('tax-ai');
+                }, 100);
+            }
+        }
+
+        /**
+         * <pre>
+         * [세금계산서 발행 입력 폼 HTML 생성]
+         * </pre>
+         * 
+         * @returns {string} 세금계산서 발행 입력 폼 HTML
+         */
+        createTaxInvoiceFormHTML() {
+            return `
+                <div class="tax-form-container">
+                    <form class="tax-form" onsubmit="window.chatbotApp.handleTaxFormSubmit(event)">
+                        <div class="form-group">
+                            <label for="company-name">회사명</label>
+                            <input type="text" id="company-name" name="companyName" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="site-name">현장명</label>
+                            <input type="text" id="site-name" name="siteName" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="tax-period">과금연월</label>
+                            <input type="date" id="tax-period" name="taxPeriod" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="issue-date">발행일자</label>
+                            <input type="date" id="issue-date" name="issueDate" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>발행문서</label>
+                            <div class="radio-group">
+                                <label class="radio-label">
+                                    <input type="radio" name="issueDocument" value="세금계산서" required>
+                                    <span>세금계산서</span>
+                                </label>
+                                <label class="radio-label">
+                                    <input type="radio" name="issueDocument" value="세금계산서+거래명세서" required>
+                                    <span>세금계산서+거래명세서</span>
+                                </label>
+                                <label class="radio-label">
+                                    <input type="radio" name="issueDocument" value="거래명세서" required>
+                                    <span>거래명세서</span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="contact-name">이름</label>
+                            <input type="text" id="contact-name" name="contactName" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="contact-phone">연락처</label>
+                            <input type="text" id="contact-phone" name="contactPhone" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="contact-email">이메일(세금계산서 발행 받을 주소)</label>
+                            <input type="email" id="contact-email" name="contactEmail" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="remarks">비고(추가문의사항)</label>
+                            <textarea id="remarks" name="remarks" rows="3"></textarea>
+                        </div>
+                        
+                        <div class="form-submit">
+                            <div class="button-group">
+                                <button type="submit" class="submit-btn">전송</button>
+                                <button type="button" class="cancel-btn" onclick="window.chatbotApp.handleTaxFormCancel()">취소</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            `;
+        }
+
+        /**
+         * <pre>
+         * [세금계산서 발행 폼 제출 처리]
+         * </pre>
+         * 
+         * @param {Event} event 폼 제출 이벤트
+         */
+        handleTaxFormSubmit(event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const data = Object.fromEntries(formData.entries());
+
+            // 접수번호 생성
+            const receiptNumber = generateTaxReceiptNumber();
+            const now = new Date();
+
+            // n8n tax.js에 맞는 데이터 변환 + actionNo 추가
+            const payload = {
+                receiptNumber,
+                companyName: data.companyName,
+                siteName: data.siteName,
+                billingMonth: data.taxPeriod, // 과금연월
+                issueDate: data.issueDate,
+                contactName: data.contactName,
+                phoneNumber: data.contactPhone,
+                email: data.contactEmail,
+                requestedDocuments: data.issueDocument,
+                notes: data.remarks,
+                timestamp: getKoreanDatetimeString(now), // 한국식 포맷
+                actionNo: 1 // 발행: 1
+            };
+
+            fetch('https://ai-chatbot.myconst.com/webhook/chatbot/tax', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+            .then(res => res.ok ? res.json() : Promise.reject(res))
+            .then(result => {
+                // 1. 접수번호 안내 메시지
+                const chatLayer = document.querySelector('[data-chat-type="tax-ai"]');
+                if (chatLayer) {
+                    const messagesContainer = chatLayer.querySelector('.chat-messages');
+                    const config = this.getChatConfig('tax-ai');
+                    // 접수번호 안내 메시지
+                    const receiptMsg = document.createElement('div');
+                    receiptMsg.className = 'message bot';
+                    receiptMsg.innerHTML = `
+                        <div class=\"modern-bot-icon\" style=\"background: ${config.botMessageColor};\">\n                    <i class=\"mdi mdi-robot\" style=\"color: white; font-size: 20px;\"></i>\n                </div>\n                <div class=\"modern-bot-content\" style=\"border: 1.5px solid ${config.botMessageColor}; background-color: #fff0f0;\">\n                    <div class=\"modern-bot-text\">\n                        ✅ 세금계산서 발행 요청이 정상적으로 접수되었습니다.<br>\n                        <strong>접수번호: ${receiptNumber}</strong>를 꼭 기억해 주세요!\n                    </div>\n                </div>\n            `;
+                    messagesContainer.appendChild(receiptMsg);
+                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                    // 2. 기존 상세 안내 메시지
+                    const successMessage = document.createElement('div');
+                    successMessage.className = 'message bot';
+                    successMessage.innerHTML = `
+                        <div class=\"modern-bot-icon\" style=\"background: ${config.botMessageColor};\">\n                    <i class=\"mdi mdi-robot\" style=\"color: white; font-size: 20px;\"></i>\n                </div>\n                <div class=\"modern-bot-content\" style=\"border: 1.5px solid ${config.botMessageColor}; background-color: #fff0f0;\">\n                    <div class=\"modern-bot-text\">\n                        <strong>접수 내용:</strong><br>\n                        • 회사명: ${data.companyName}<br>\n                        • 현장명: ${data.siteName}<br>\n                        • 과금연월: ${data.taxPeriod}<br>\n                        • 발행일자: ${data.issueDate}<br>\n                        • 발행문서: ${this.getDocumentTypeText(data.issueDocument)}<br>\n                        • 담당자: ${data.contactName}<br>\n                        • 연락처: ${data.contactPhone}<br>\n                        • 이메일: ${data.contactEmail}<br>\n                        ${data.remarks ? `• 비고: ${data.remarks}<br>` : ''}<br>\n                        담당자가 검토 후 연락드리겠습니다.\n                    </div>\n                </div>\n            `;
+                    messagesContainer.appendChild(successMessage);
+                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                }
+            })
+            .catch(err => {
+                alert('세금계산서 발행 요청 전송에 실패했습니다. 다시 시도해 주세요.');
+            });
+        }
+
+        /**
+         * <pre>
+         * [발행문서 타입 텍스트 변환]
+         * </pre>
+         * 
+         * @param {string} documentType 문서 타입
+         * @returns {string} 표시 텍스트
+         */
+        getDocumentTypeText(documentType) {
+            switch (documentType) {
+                case 'tax-invoice':
+                    return '세금계산서';
+                case 'tax-invoice-detail':
+                    return '세금계산서+거래명세서';
+                case 'detail':
+                    return '거래명세서';
+                default:
+                    return documentType;
+            }
+        }
+
+        /**
+         * <pre>
+         * [세금계산서 발행 폼 취소 처리]
+         * </pre>
+         */
+        handleTaxFormCancel() {
+            const chatLayer = document.querySelector('[data-chat-type="tax-ai"]');
+            if (!chatLayer) return;
+
+            const messagesContainer = chatLayer.querySelector('.chat-messages');
+            
+            // 폼 메시지 제거 (마지막 메시지가 폼이므로 제거)
+            const lastMessage = messagesContainer.lastElementChild;
+            if (lastMessage && lastMessage.querySelector('.tax-form-container')) {
+                lastMessage.remove();
+            }
+            
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        /**
+         * <pre>
+         * [세금계산서 조회 입력 폼 HTML 생성]
+         * </pre>
+         * 
+         * @returns {string} 세금계산서 조회 입력 폼 HTML
+         */
+        createTaxInvoiceSearchFormHTML() {
+            return `
+                <div class="tax-form-container">
+                    <form class="tax-form" onsubmit="window.chatbotApp.handleTaxSearchFormSubmit(event)">
+                        <div class="form-group">
+                            <label for="receipt-number">접수번호</label>
+                            <input type="text" id="receipt-number" name="receiptNumber" required>
+                        </div>
+                        
+                        <div class="form-submit">
+                            <div class="button-group">
+                                <button type="submit" class="submit-btn">조회</button>
+                                <button type="button" class="cancel-btn" onclick="window.chatbotApp.handleTaxFormCancel()">취소</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            `;
+        }
+
+        /**
+         * <pre>
+         * [세금계산서 조회 폼 제출 처리]
+         * </pre>
+         * 
+         * @param {Event} event 폼 제출 이벤트
+         */
+        handleTaxSearchFormSubmit(event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const data = Object.fromEntries(formData.entries());
+            const now = new Date();
+
+            // n8n tax.js에 맞는 데이터 변환 + actionNo 추가
+            const payload = {
+                receiptNumber: data.receiptNumber,
+                timestamp: getKoreanDatetimeString(now), // 한국식 포맷
+                actionNo: 2 // 조회: 2
+            };
+
+            fetch('https://ai-chatbot.myconst.com/webhook/chatbot/tax', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+            .then(res => res.ok ? res.json() : Promise.reject(res))
+            .then(result => {
+                // n8n에서 반환한 안내 메시지를 그대로 채팅창에 출력
+                const chatLayer = document.querySelector('[data-chat-type="tax-ai"]');
+                if (chatLayer && result && (result.message || result.text)) {
+                    const messagesContainer = chatLayer.querySelector('.chat-messages');
+                    const config = this.getChatConfig('tax-ai');
+                    const msg = document.createElement('div');
+                    msg.className = 'message bot';
+                    msg.innerHTML = `
+                        <div class=\"modern-bot-icon\" style=\"background: ${config.botMessageColor};\">\n                    <i class=\"mdi mdi-robot\" style=\"color: white; font-size: 20px;\"></i>\n                </div>\n                <div class=\"modern-bot-content\" style=\"border: 1.5px solid ${config.botMessageColor}; background-color: #fff0f0;\">\n                    <div class=\"modern-bot-text\">\n                        ${(result.message || result.text)}\n                    </div>\n                </div>\n            `;
+                    messagesContainer.appendChild(msg);
+                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                }
+            })
+            .catch(err => {
+                alert('세금계산서 조회 요청 전송에 실패했습니다. 다시 시도해 주세요.');
+            });
+        }
     }
 
     // Initialize chatbot when DOM is loaded
@@ -2875,3 +3397,30 @@
     // Export for global access
     window.ConstructionSafetyChatbot = ChatbotApp;
 })(); 
+
+// --- 접수번호 생성 함수 ---
+function generateTaxReceiptNumber() {
+    const now = new Date();
+    const pad = (n, len = 2) => n.toString().padStart(len, '0');
+    return 'TAX' +
+        now.getFullYear() +
+        pad(now.getMonth() + 1) +
+        pad(now.getDate()) +
+        pad(now.getHours()) +
+        pad(now.getMinutes()) +
+        pad(now.getSeconds()) +
+        pad(now.getMilliseconds(), 3);
+} 
+
+// --- 한국식 날짜/시간 포맷 함수 ---
+function getKoreanDatetimeString(date = new Date()) {
+    return date.toLocaleString('ko-KR', {
+        year: 'numeric',
+        month: 'numeric',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: 'numeric',
+        second: 'numeric',
+        hour12: true
+    });
+} 
