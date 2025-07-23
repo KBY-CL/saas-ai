@@ -3219,7 +3219,7 @@
             const data = Object.fromEntries(formData.entries());
 
             // 접수번호 생성
-            const receiptNumber = generateTaxReceiptNumber();
+            const receiptNumber = this.constructor.generateTaxReceiptNumber();
             const now = new Date();
 
             // n8n tax.js에 맞는 데이터 변환 + actionNo 추가
@@ -3234,7 +3234,7 @@
                 email: data.contactEmail,
                 requestedDocuments: data.issueDocument,
                 notes: data.remarks,
-                timestamp: getKoreanDatetimeString(now), // 한국식 포맷
+                timestamp: this.constructor.getKoreanDatetimeString(now), // 한국식 포맷
                 actionNo: 1 // 발행: 1
             };
 
@@ -3243,26 +3243,18 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             })
-            .then(res => res.ok ? res.json() : Promise.reject(res))
-            .then(result => {
-                // 1. 접수번호 안내 메시지
+            .then(res => res.ok ? res.text() : Promise.reject(res))
+            .then(resultText => {
+                // n8n에서 반환한 안내 메시지를 그대로 채팅창에 출력 (text)
                 const chatLayer = document.querySelector('[data-chat-type="tax-ai"]');
-                if (chatLayer) {
+                if (chatLayer && resultText) {
                     const messagesContainer = chatLayer.querySelector('.chat-messages');
                     const config = this.getChatConfig('tax-ai');
-                    // 접수번호 안내 메시지
-                    const receiptMsg = document.createElement('div');
-                    receiptMsg.className = 'message bot';
-                    receiptMsg.innerHTML = `
-                        <div class=\"modern-bot-icon\" style=\"background: ${config.botMessageColor};\">\n                    <i class=\"mdi mdi-robot\" style=\"color: white; font-size: 20px;\"></i>\n                </div>\n                <div class=\"modern-bot-content\" style=\"border: 1.5px solid ${config.botMessageColor}; background-color: #fff0f0;\">\n                    <div class=\"modern-bot-text\">\n                        ✅ 세금계산서 발행 요청이 정상적으로 접수되었습니다.<br>\n                        <strong>접수번호: ${receiptNumber}</strong>를 꼭 기억해 주세요!\n                    </div>\n                </div>\n            `;
-                    messagesContainer.appendChild(receiptMsg);
-                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
-                    // 2. 기존 상세 안내 메시지
-                    const successMessage = document.createElement('div');
-                    successMessage.className = 'message bot';
-                    successMessage.innerHTML = `
-                        <div class=\"modern-bot-icon\" style=\"background: ${config.botMessageColor};\">\n                    <i class=\"mdi mdi-robot\" style=\"color: white; font-size: 20px;\"></i>\n                </div>\n                <div class=\"modern-bot-content\" style=\"border: 1.5px solid ${config.botMessageColor}; background-color: #fff0f0;\">\n                    <div class=\"modern-bot-text\">\n                        <strong>접수 내용:</strong><br>\n                        • 회사명: ${data.companyName}<br>\n                        • 현장명: ${data.siteName}<br>\n                        • 과금연월: ${data.taxPeriod}<br>\n                        • 발행일자: ${data.issueDate}<br>\n                        • 발행문서: ${this.getDocumentTypeText(data.issueDocument)}<br>\n                        • 담당자: ${data.contactName}<br>\n                        • 연락처: ${data.contactPhone}<br>\n                        • 이메일: ${data.contactEmail}<br>\n                        ${data.remarks ? `• 비고: ${data.remarks}<br>` : ''}<br>\n                        담당자가 검토 후 연락드리겠습니다.\n                    </div>\n                </div>\n            `;
-                    messagesContainer.appendChild(successMessage);
+                    const msg = document.createElement('div');
+                    msg.className = 'message bot';
+                    msg.innerHTML = `
+                        <div class=\"modern-bot-icon\" style=\"background: ${config.botMessageColor};\">\n                    <i class=\"mdi mdi-robot\" style=\"color: white; font-size: 20px;\"></i>\n                </div>\n                <div class=\"modern-bot-content\" style=\"border: 1.5px solid ${config.botMessageColor}; background-color: #fff0f0;\">\n                    <div class=\"modern-bot-text\">\n                        ${resultText}\n                    </div>\n                </div>\n            `;
+                    messagesContainer.appendChild(msg);
                     messagesContainer.scrollTop = messagesContainer.scrollHeight;
                 }
             })
@@ -3355,7 +3347,7 @@
             // n8n tax.js에 맞는 데이터 변환 + actionNo 추가
             const payload = {
                 receiptNumber: data.receiptNumber,
-                timestamp: getKoreanDatetimeString(now), // 한국식 포맷
+                timestamp: this.constructor.getKoreanDatetimeString(now), // 한국식 포맷
                 actionNo: 2 // 조회: 2
             };
 
@@ -3364,17 +3356,17 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             })
-            .then(res => res.ok ? res.json() : Promise.reject(res))
-            .then(result => {
-                // n8n에서 반환한 안내 메시지를 그대로 채팅창에 출력
+            .then(res => res.ok ? res.text() : Promise.reject(res))
+            .then(resultText => {
+                // n8n에서 반환한 안내 메시지를 그대로 채팅창에 출력 (text)
                 const chatLayer = document.querySelector('[data-chat-type="tax-ai"]');
-                if (chatLayer && result && (result.message || result.text)) {
+                if (chatLayer && resultText) {
                     const messagesContainer = chatLayer.querySelector('.chat-messages');
                     const config = this.getChatConfig('tax-ai');
                     const msg = document.createElement('div');
                     msg.className = 'message bot';
                     msg.innerHTML = `
-                        <div class=\"modern-bot-icon\" style=\"background: ${config.botMessageColor};\">\n                    <i class=\"mdi mdi-robot\" style=\"color: white; font-size: 20px;\"></i>\n                </div>\n                <div class=\"modern-bot-content\" style=\"border: 1.5px solid ${config.botMessageColor}; background-color: #fff0f0;\">\n                    <div class=\"modern-bot-text\">\n                        ${(result.message || result.text)}\n                    </div>\n                </div>\n            `;
+                        <div class=\"modern-bot-icon\" style=\"background: ${config.botMessageColor};\">\n                    <i class=\"mdi mdi-robot\" style=\"color: white; font-size: 20px;\"></i>\n                </div>\n                <div class=\"modern-bot-content\" style=\"border: 1.5px solid ${config.botMessageColor}; background-color: #fff0f0;\">\n                    <div class=\"modern-bot-text\">\n                        ${resultText}\n                    </div>\n                </div>\n            `;
                     messagesContainer.appendChild(msg);
                     messagesContainer.scrollTop = messagesContainer.scrollHeight;
                 }
@@ -3382,6 +3374,32 @@
             .catch(err => {
                 alert('세금계산서 조회 요청 전송에 실패했습니다. 다시 시도해 주세요.');
             });
+        }
+
+        // === static 메서드로 추가 ===
+        static getKoreanDatetimeString(date = new Date()) {
+            return date.toLocaleString('ko-KR', {
+                year: 'numeric',
+                month: 'numeric',
+                day: 'numeric',
+                hour: 'numeric',
+                minute: 'numeric',
+                second: 'numeric',
+                hour12: true
+            });
+        }
+
+        static generateTaxReceiptNumber() {
+            const now = new Date();
+            const pad = (n, len = 2) => n.toString().padStart(len, '0');
+            return 'TAX' +
+                now.getFullYear() +
+                pad(now.getMonth() + 1) +
+                pad(now.getDate()) +
+                pad(now.getHours()) +
+                pad(now.getMinutes()) +
+                pad(now.getSeconds()) +
+                pad(now.getMilliseconds(), 3);
         }
     }
 
@@ -3397,30 +3415,3 @@
     // Export for global access
     window.ConstructionSafetyChatbot = ChatbotApp;
 })(); 
-
-// --- 접수번호 생성 함수 ---
-function generateTaxReceiptNumber() {
-    const now = new Date();
-    const pad = (n, len = 2) => n.toString().padStart(len, '0');
-    return 'TAX' +
-        now.getFullYear() +
-        pad(now.getMonth() + 1) +
-        pad(now.getDate()) +
-        pad(now.getHours()) +
-        pad(now.getMinutes()) +
-        pad(now.getSeconds()) +
-        pad(now.getMilliseconds(), 3);
-} 
-
-// --- 한국식 날짜/시간 포맷 함수 ---
-function getKoreanDatetimeString(date = new Date()) {
-    return date.toLocaleString('ko-KR', {
-        year: 'numeric',
-        month: 'numeric',
-        day: 'numeric',
-        hour: 'numeric',
-        minute: 'numeric',
-        second: 'numeric',
-        hour12: true
-    });
-} 
