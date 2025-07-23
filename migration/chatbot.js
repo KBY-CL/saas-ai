@@ -496,6 +496,7 @@
                     margin-top: 2px;
                     flex-shrink: 0;
                     position: relative;
+                    background-color: #dc3545;
                 }
 
                 .modern-bot-icon .mdi {
@@ -507,7 +508,7 @@
 
                 .modern-bot-content {
                     border-radius: 12px;
-                    padding: 16px 18px;
+                    padding: 16px 18px 8px 18px;
                     position: relative;
                     flex: 1;
                     min-width: 150px;
@@ -530,7 +531,7 @@
                 }
 
                 .modern-bot-text {
-                    color: #fff;
+                    color: #000;
                     font-size: 1rem;
                     line-height: 1.6;
                     text-align: left;
@@ -543,7 +544,6 @@
                 .modern-bot-divider {
                     width: 100%;
                     height: 1px;
-                    background: rgba(255, 255, 255, 0.3);
                     margin: 8px 0;
                 }
 
@@ -555,8 +555,8 @@
                 }
 
                 .modern-bot-time {
-                    font-size: 0.85rem;
-                    color: #fff;
+                    font-size: 12px;
+                    color: #6c757d;
                     font-weight: 400;
                 }
 
@@ -565,7 +565,6 @@
                     background: transparent;
                     border-radius: 50%;
                     padding: 2px;
-                    color: #fff;
                     border: none;
                     cursor: pointer;
                     display: flex;
@@ -576,7 +575,7 @@
                 }
 
                 .modern-copy-btn.bottom-right:hover {
-                    background: rgba(255,255,255,0.1);
+                    background: rgba(0, 0, 0, 0.1);
                 }
 
                 /* 사용자 메시지 */
@@ -586,12 +585,12 @@
                     gap: 10px;
                     background: transparent;
                     border: none;
-                    max-width: 80%;
+                    max-width: 400px;
                     min-width: 250px;
                     box-shadow: none;
                     overflow: hidden;
                     justify-content: flex-end;
-                    flex-direction: row-reverse;
+                    flex-direction: row;
                     margin-left: auto;
                 }
 
@@ -605,6 +604,7 @@
                     margin-top: 2px;
                     flex-shrink: 0;
                     position: relative;
+                    background: #c53030;
                 }
 
                 .modern-user-icon .mdi {
@@ -616,14 +616,16 @@
 
                 .modern-user-content {
                     border-radius: 12px;
-                    padding: 16px 18px;
+                    padding: 16px 18px 8px 18px;
                     position: relative;
                     flex: 1;
                     min-width: 200px;
                     word-wrap: break-word;
                     overflow-wrap: break-word;
                     overflow-x: hidden;
-                    max-width: 80%;
+                    max-width: 350px;
+                    background: #c53030;
+                    border: 1.5px solid #c53030;
                 }
 
                 .modern-user-content::after {
@@ -635,7 +637,7 @@
                     height: 0;
                     border-top: 8px solid transparent;
                     border-bottom: 8px solid transparent;
-                    border-left: 8px solid;
+                    border-left: 8px solid #c53030;
                 }
 
                 .modern-user-text {
@@ -664,7 +666,7 @@
                 }
 
                 .modern-user-time {
-                    font-size: 0.85rem;
+                    font-size: 12px;
                     color: #fff;
                     font-weight: 400;
                 }
@@ -1212,6 +1214,43 @@
                     align-items: center;
                     justify-content: center;
                 }
+
+                .chat-list-item .mdi {
+                    font-size: 24px;
+                    margin-right: 12px;
+                    color: #666;
+                }
+
+                .chat-list-item[data-theme="kakao"] .mdi {
+                    color: #fee500;
+                }
+
+                .chat-list-item:hover {
+                    background-color: #f5f5f5;
+                }
+
+                .chat-card[data-theme="kakao"] .chat-avatar {
+                    background: #fee500 !important;
+                }
+
+                .chat-card[data-theme="kakao"] .chat-avatar .mdi {
+                    color: #000 !important;
+                }
+
+                .sidebar-chat {
+                    transition: all 0.2s ease-in-out;
+                }
+
+                .sidebar-chat:hover {
+                    background: #d0d0d0 !important;
+                    transform: scale(1.05);
+                    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+                }
+
+                .sidebar-chat:hover img {
+                    transform: scale(1.1);
+                    transition: transform 0.2s ease-in-out;
+                }
             `;
             document.head.appendChild(style);
         }
@@ -1289,8 +1328,8 @@
                   { id: 'construction-safety', label: '건설안전 A.I', icon: 'mdi-robot', theme: 'construction-safety', preview: '안전 및 대책 관련 문의', badge: 1 },
                   { id: 'risk-assessment', label: '위험성평가 A.I', icon: 'mdi-shield-check', theme: 'risk-assessment', preview: '시스템사용방법 관련 문의', badge: 0 },
                   { id: 'tax-ai', label: '세금계산서 A.I', icon: 'mdi-calculator', theme: 'tax-ai', preview: '세금계산서 관련 문의', badge: 2 },
-                  { id: 'site-ai', label: '현장개통/해지 A.I', icon: 'mdi-office-building', theme: 'site-ai', preview: '현장개통/해지 안내', badge: 0 },
-                  { id: 'kakao-link', label: '카카오톡 상담', icon: 'mdi-message-text', theme: 'risk-assessment', preview: '카카오톡으로 바로 상담하기', badge: 0, isExternal: true, link: 'https://pf.kakao.com/_cxcxdxfs/chat' }
+                  { id: 'site-ai', label: '현장개통/해지 A.I', icon: 'mdi-office-building', theme: 'site-ai', preview: '현장개통/해지 관련 문의', badge: 0 },
+                  { id: 'kakao-link', label: '카카오톡 상담', icon: 'mdi-message-text-outline', theme: 'kakao', preview: '카카오톡 상담원 연결', badge: 0, isExternal: true, link: 'https://pf.kakao.com/_cxcxdxfs/chat' }
                 ];
 
                 // 각 채팅방의 마지막 메시지 시간 구하기
@@ -1315,15 +1354,8 @@
                       <div class="sidebar-logo" style="margin-bottom:16px; display:flex; align-items:center; justify-content:center;">
                         <img src="symbol-kosha.png" alt="logo" style="width:36px; height:36px; border-radius:8px;" />
                       </div>
-                      <div class="sidebar-chat" style="margin: 8px 0; cursor:pointer; width:44px; height:44px; display:flex; align-items:center; justify-content:center;">
-                        <svg width="36" height="36" viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:block;">
-                          <defs>
-                            <filter id="chat-bubble-shadow" x="0" y="0" width="38" height="38" filterUnits="userSpaceOnUse">
-                              <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#bbb" flood-opacity="0.25"/>
-                            </filter>
-                          </defs>
-                          <path d="M7 19C7 12.9249 12.4772 8 19 8C25.5228 8 31 12.9249 31 19C31 25.0751 25.5228 30 19 30C17.2222 30 15.5278 29.7222 13.9722 29.1944C13.4167 29.0139 12.8056 29.0556 12.2778 29.3056L9.5 30.6111C8.63889 31.0139 7.72222 30.1944 8.02778 29.3056L9.02778 26.4722C9.22222 25.9444 9.16667 25.3333 8.98611 24.7778C8.36111 23.2222 8 21.6389 8 20V19H7Z" fill="#555" filter="url(#chat-bubble-shadow)"/>
-                        </svg>
+                      <div class="sidebar-chat" style="margin: 8px 0; cursor:pointer; width:44px; height:44px; display:flex; align-items:center; justify-content:center; background: #ececec; border-radius: 4px;">
+                        <img src="chat.png" alt="chat" style="width: 28px; height: 28px;">
                       </div>
                     </div>
                     <div class="floating-menu-main">
@@ -1342,7 +1374,7 @@
                             const config = this.getChatConfig(item.theme);
                             if (item.isExternal) {
                               return `
-                                <div class="chat-card" onclick="window.open('${item.link}', '_blank')">
+                                <div class="chat-card" data-theme="${item.theme}" onclick="window.open('${item.link}', '_blank')">
                                   <div class="chat-avatar" style="background:${config.headerColor};">
                                     <i class="mdi ${item.icon}" style="font-size: 22px; color: #fff;"></i>
                                   </div>
@@ -1492,7 +1524,7 @@
                         messagesHTML += `
                         <div class="message user">
                             <div class="modern-user-card">
-                                <div class="modern-user-content" style="background: ${config.userMessageColor};">
+                                <div class="modern-user-content">
                                     <div class="modern-user-text">${msg.text}</div>
                                     <div class="modern-user-divider"></div>
                                     <div class="modern-user-bottom">
@@ -1502,7 +1534,7 @@
                                         </button>
                                     </div>
                                 </div>
-                                <div class="modern-user-icon" style="background: ${config.userMessageColor};">
+                                <div class="modern-user-icon">
                                     <i class="mdi mdi-account" style="color: white; font-size: 20px;"></i>
                                 </div>
                             </div>
@@ -1514,13 +1546,13 @@
                             <div class="modern-bot-icon" style="background: ${config.botMessageColor};">
                                 <i class="mdi mdi-robot" style="color: white; font-size: 20px;"></i>
                             </div>
-                            <div class="modern-bot-content" style="background: ${config.botMessageColor};">
+                            <div class="modern-bot-content" style="border: 1.5px solid ${config.botMessageColor}; background-color: ${config.botMessageColor === '#dc3545' ? '#fff0f0' : config.botMessageColor === '#1976d2' ? '#e3f2fd' : config.botMessageColor === '#4caf50' ? '#f1f8e9' : config.botMessageColor === '#fee500' ? '#fff9c4' : '#fff0f0'};">
                                 <div class="modern-bot-text">${msg.text}</div>
-                                <div class="modern-bot-divider"></div>
+                                <div class="modern-bot-divider" style="background: ${config.botMessageColor};"></div>
                                 <div class="modern-bot-bottom">
                                     <span class="modern-bot-time">${msg.time}</span>
                                     <button class="modern-copy-btn bottom-right" onclick="window.chatbotApp.copyToClipboard('${msg.text.replace(/'/g, "\\'")}')" aria-label="메시지 복사">
-                                        <i class="mdi mdi-content-copy" style="font-size: 16px; color: white;"></i>
+                                        <i class="mdi mdi-content-copy" style="font-size: 16px; color: ${config.botMessageColor};"></i>
                                     </button>
                                 </div>
                             </div>
@@ -1535,13 +1567,13 @@
                         <div class="modern-bot-icon" style="background: ${config.botMessageColor};">
                             <i class="mdi mdi-robot" style="color: white; font-size: 20px;"></i>
                         </div>
-                        <div class="modern-bot-content" style="background: ${config.botMessageColor};">
+                        <div class="modern-bot-content" style="border: 1.5px solid ${config.botMessageColor}; background-color: ${config.botMessageColor === '#dc3545' ? '#fff0f0' : config.botMessageColor === '#1976d2' ? '#e3f2fd' : config.botMessageColor === '#4caf50' ? '#f1f8e9' : config.botMessageColor === '#fee500' ? '#fff9c4' : '#fff0f0'};">
                             <div class="modern-bot-text">${config.welcomeMessage}</div>
-                            <div class="modern-bot-divider"></div>
+                            <div class="modern-bot-divider" style="background: ${config.botMessageColor};"></div>
                             <div class="modern-bot-bottom">
                                 <span class="modern-bot-time">${this.getCurrentTime()}</span>
                                 <button class="modern-copy-btn bottom-right" onclick="window.chatbotApp.copyToClipboard('${config.welcomeMessage.replace(/'/g, "\\'")}')" aria-label="메시지 복사">
-                                    <i class="mdi mdi-content-copy" style="font-size: 16px; color: white;"></i>
+                                    <i class="mdi mdi-content-copy" style="font-size: 16px; color: ${config.botMessageColor};"></i>
                                 </button>
                             </div>
                         </div>
@@ -1563,9 +1595,6 @@
                     <div class="chat-header-controls">
                         <button class="chat-header-btn" onclick="window.chatbotApp.minimizeChatLayer('${type}')" aria-label="최소화">
                             <i class="mdi mdi-minus" style="color: white; font-size: 18px;"></i>
-                        </button>
-                        <button class="chat-header-btn" onclick="window.chatbotApp.resizeChatLayer('${type}', 'mini')" aria-label="작게">
-                            <i class="mdi mdi-arrow-collapse" style="color: white; font-size: 18px;"></i>
                         </button>
                         <button class="chat-header-btn" onclick="window.chatbotApp.resizeChatLayer('${type}', 'mid')" aria-label="중간 크기">
                             <i class="mdi mdi-arrow-expand-horizontal" style="color: white; font-size: 18px;"></i>
@@ -1633,7 +1662,7 @@
                 'risk-assessment': {
                     title: '위험성평가 전문가',
                     headerColor: '#1976d2',
-                    botMessageColor: '#2196f3',
+                    botMessageColor: '#1976d2',
                     userMessageColor: '#ff9800',
                     placeholder: '위험성평가에 대해 궁금한 것을 물어보세요...',
                     welcomeMessage: '안녕하세요? 저는 위험성평가 전문가입니다.\n\n작업장소와 작업공종을 알려주시면 해당 작업의 위험요인을 분석하고 평가 방법을 안내해드리겠습니다.\n\n위험성평가는 작업 전 필수 절차로, 안전한 작업 환경을 조성하는 데 중요한 역할을 합니다.'
@@ -1649,10 +1678,18 @@
                 'site-ai': {
                     title: '현장개통/해지 전문가',
                     headerColor: '#4caf50',
-                    botMessageColor: '#45a049',
+                    botMessageColor: '#4caf50',
                     userMessageColor: '#2196f3',
                     placeholder: '현장개통/해지에 대해 궁금한 것을 물어보세요...',
                     welcomeMessage: '안녕하세요? 저는 현장개통/해지 전문가입니다.\n\n현장개통과 해지 절차에 대해 안내해드리겠습니다.\n\n현장개통은 새로운 건설현장을 시작할 때 필요한 절차이며, 해지는 작업 완료 후 현장을 정리하는 절차입니다.\n\n어떤 부분에 대해 궁금하신가요?'
+                },
+                'kakao': {
+                    title: '카카오톡 상담',
+                    headerColor: '#fee500',
+                    botMessageColor: '#fee500',
+                    userMessageColor: '#fee500',
+                    placeholder: '카카오톡으로 상담하세요...',
+                    welcomeMessage: '카카오톡 상담으로 연결됩니다.'
                 }
             };
             return configs[type] || configs['construction-safety'];
@@ -1717,7 +1754,7 @@
             userMessage.className = 'message user';
             userMessage.innerHTML = `
                 <div class="modern-user-card">
-                    <div class="modern-user-content" style="background: ${config.userMessageColor};">
+                    <div class="modern-user-content">
                         <div class="modern-user-text">${message}</div>
                         <div class="modern-user-divider"></div>
                         <div class="modern-user-bottom">
@@ -1727,7 +1764,7 @@
                             </button>
                         </div>
                     </div>
-                    <div class="modern-user-icon" style="background: ${config.userMessageColor};">
+                    <div class="modern-user-icon">
                         <i class="mdi mdi-account" style="color: white; font-size: 20px;"></i>
                     </div>
                 </div>
@@ -1771,6 +1808,8 @@
                 response = `안녕하세요! 세금계산서 A.I입니다.\n\n세금계산서 작성과 관련된 질문을 해주세요. 부가가치세, 소득세, 법인세 등 다양한 세무 업무를 도와드릴 수 있습니다.\n\n구체적인 상황을 알려주시면 더 정확한 안내를 제공해드리겠습니다.'`;
             } else if (type === 'site-ai') {
                 response = `안녕하세요! 현장개통/해지 전문가입니다.\n\n현장개통과 해지 절차에 대해 안내해드리겠습니다.\n\n현장개통은 새로운 건설현장을 시작할 때 필요한 절차이며, 해지는 작업 완료 후 현장을 정리하는 절차입니다.\n\n어떤 부분에 대해 궁금하신가요?`;
+            } else if (type === 'kakao') {
+                response = `카카오톡 상담으로 연결됩니다. 문의 내용을 입력하세요.`;
             }
 
             // Bot message
@@ -1780,13 +1819,13 @@
                 <div class="modern-bot-icon" style="background: ${config.botMessageColor};">
                     <i class="mdi mdi-robot" style="color: white; font-size: 20px;"></i>
                 </div>
-                <div class="modern-bot-content" style="background: ${config.botMessageColor};">
+                <div class="modern-bot-content" style="border: 1.5px solid ${config.botMessageColor}; background-color: ${config.botMessageColor === '#dc3545' ? '#fff0f0' : config.botMessageColor === '#1976d2' ? '#e3f2fd' : config.botMessageColor === '#4caf50' ? '#f1f8e9' : config.botMessageColor === '#fee500' ? '#fff9c4' : '#fff0f0'};">
                     <div class="modern-bot-text">${response}</div>
-                    <div class="modern-bot-divider"></div>
+                    <div class="modern-bot-divider" style="background: ${config.botMessageColor};"></div>
                     <div class="modern-bot-bottom">
                         <span class="modern-bot-time">${this.getCurrentTime()}</span>
                         <button class="modern-copy-btn bottom-right" onclick="window.chatbotApp.copyToClipboard('${response.replace(/'/g, "\\'")}')" aria-label="메시지 복사">
-                            <i class="mdi mdi-content-copy" style="font-size: 16px; color: white;"></i>
+                            <i class="mdi mdi-content-copy" style="font-size: 16px; color: ${config.botMessageColor};"></i>
                         </button>
                     </div>
                 </div>
@@ -1835,17 +1874,42 @@
 
         /**
          * <pre>
-         * [채팅 레이어 크기 조절]
+         * [채팅 레이어 크기 조정 - 토글 기능]
          * </pre>
          * 
          * @param {string} type 채팅 타입
          * @param {string} size 크기 (mini, mid, max)
          */
         resizeChatLayer(type, size) {
-            this.chatLayers[type].size = size;
+            // 현재 크기 확인
+            const currentSize = this.chatLayers[type].size;
+            
+            // 최대화 버튼 클릭 시 토글 기능
+            if (size === 'max') {
+                if (currentSize === 'max') {
+                    // 이미 최대화된 상태면 최소화로 변경
+                    this.chatLayers[type].size = 'mini';
+                } else {
+                    // 최대화되지 않은 상태면 최대화로 변경
+                    this.chatLayers[type].size = 'max';
+                }
+            } else if (size === 'mid') {
+                // 중간 크기 버튼 클릭 시 토글 기능
+                if (currentSize === 'mid') {
+                    // 이미 중간 크기 상태면 최소화로 변경
+                    this.chatLayers[type].size = 'mini';
+                } else {
+                    // 중간 크기가 아닌 상태면 중간 크기로 변경
+                    this.chatLayers[type].size = 'mid';
+                }
+            } else {
+                // 최대화가 아닌 다른 크기들은 기존 로직 유지
+                this.chatLayers[type].size = size;
+            }
+            
             const chatLayer = document.querySelector(`[data-chat-type="${type}"]`);
             if (chatLayer) {
-                chatLayer.className = `chat-layer ${size}`;
+                chatLayer.className = `chat-layer ${this.chatLayers[type].size}`;
             }
             this.saveState();
         }
@@ -2076,13 +2140,13 @@
          */
         getCurrentTime() {
             const now = new Date();
-            const year = now.getFullYear();
-            const month = String(now.getMonth() + 1).padStart(2, '0');
-            const day = String(now.getDate()).padStart(2, '0');
-            const hours = String(now.getHours()).padStart(2, '0');
+            const hours = now.getHours();
             const minutes = String(now.getMinutes()).padStart(2, '0');
+            const isPM = hours >= 12;
+            const hour12 = hours % 12 === 0 ? 12 : hours % 12;
+            const ampm = isPM ? '오후' : '오전';
             
-            return `${year}.${month}.${day} ${hours}:${minutes}`;
+            return `${ampm} ${hour12}:${minutes}`;
         }
 
         /**
