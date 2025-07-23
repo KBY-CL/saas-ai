@@ -71,6 +71,26 @@
                   <div v-if="!msg.isLoading" class="modern-bot-divider"></div>
                   <div v-if="!msg.isLoading" class="modern-bot-bottom">
                     <span class="modern-bot-time">{{ msg.sentAt }}</span>
+                    <!-- 별점 시스템 -->
+                    <div class="modern-rating-container" v-if="!msg.isInitial">
+                      <div class="modern-stars">
+                        <v-btn
+                          v-for="star in 5"
+                          :key="star"
+                          icon
+                          size="x-small"
+                          variant="text"
+                          class="modern-star-btn"
+                          :class="{ 'rated': star <= (msg.rating || 0) }"
+                          :aria-label="`${star}점`"
+                          @click="rateMessage(msg.id, star)"
+                        >
+                          <v-icon size="16" :color="star <= (msg.rating || 0) ? '#9c27b0' : '#9c27b0'">
+                            {{ star <= (msg.rating || 0) ? 'mdi-star' : 'mdi-star-outline' }}
+                          </v-icon>
+                        </v-btn>
+                      </div>
+                    </div>
                     <v-btn
                       icon
                       size="x-small"
@@ -206,8 +226,8 @@ const props = defineProps<{ bShow: boolean }>()
 const emit = defineEmits<{ (e: 'close'): void; (e: 'send', content: string): void }>()
 
 const input = ref('')
-// 메시지 타입에 sentAt 추가
-const messages = ref<{ id: string; content: string; isUser: boolean; sentAt?: string; isLoading?: boolean; isError?: boolean }[]>([])
+// 메시지 타입에 sentAt, rating, isInitial 추가
+const messages = ref<{ id: string; content: string; isUser: boolean; sentAt?: string; isLoading?: boolean; isError?: boolean; rating?: number; isInitial?: boolean }[]>([])
 const bShowCopySnackbar = ref(false)
 const messagesArea = ref<HTMLElement | null>(null)
 const messageList = ref<HTMLElement | null>(null)
@@ -586,6 +606,38 @@ function scrollToBottom() {
   })
 }
 
+// 별점 시스템 함수
+function rateMessage(messageId: string, rating: number) {
+  const message = messages.value.find(msg => msg.id === messageId)
+  if (message && !message.isUser) {
+    message.rating = rating
+    
+    // 로컬 스토리지에 별점 저장
+    const ratings = JSON.parse(localStorage.getItem('risk_chatbot_ratings') || '{}')
+    ratings[messageId] = rating
+    localStorage.setItem('risk_chatbot_ratings', JSON.stringify(ratings))
+    
+    // 추후 Supabase 연동 시 여기에 저장 로직 추가
+    console.log(`메시지 ${messageId}에 ${rating}점 평가`)
+  }
+}
+
+// 저장된 별점 로드 함수
+function loadSavedRatings() {
+  try {
+    const ratings = JSON.parse(localStorage.getItem('risk_chatbot_ratings') || '{}')
+    
+    // 각 메시지에 저장된 별점 적용
+    messages.value.forEach(message => {
+      if (!message.isUser && ratings[message.id]) {
+        message.rating = ratings[message.id]
+      }
+    })
+  } catch (error) {
+    console.error('별점 로드 중 오류:', error)
+  }
+}
+
 // 다이얼로그 업데이트 함수
 function onDialogUpdate(value: boolean) {
   if (!value) {
@@ -667,8 +719,12 @@ onMounted(() => {
       id: '1',
       content: '안녕하세요!\n저는 위험성평가 시스템 사용방법을 안내해드리는\n위험성평가 전문가 A.I 입니다.\n궁금한것이 있거나 도움이 필요하시면 말씀해주세요.\n\n( 예시: 추가위험발굴 메뉴에서 조치하는 방법 알려줘 )',
       isUser: false,
-      sentAt
+      sentAt,
+      isInitial: true
     })
+    
+    // 저장된 별점 로드
+    loadSavedRatings()
   }
   
   // 메시지 변경 시 스크롤
@@ -1382,6 +1438,46 @@ onUnmounted(() => {
   white-space: nowrap;
   letter-spacing: 0.01em;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* 별점 시스템 스타일 */
+.modern-rating-container {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-right: 8px;
+}
+
+.modern-stars {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.modern-star-btn {
+  padding: 2px !important;
+  min-width: 20px !important;
+  width: 20px !important;
+  height: 20px !important;
+  border-radius: 2px !important;
+  transition: all 0.2s ease;
+}
+
+.modern-star-btn:hover {
+  background-color: rgba(156, 39, 176, 0.1) !important;
+  transform: scale(1.1);
+}
+
+.modern-star-btn.rated {
+  background-color: rgba(156, 39, 176, 0.1) !important;
+}
+
+.modern-star-btn .v-icon {
+  transition: all 0.2s ease;
+}
+
+.modern-star-btn:hover .v-icon {
+  transform: scale(1.1);
 }
 
 .minimized-content .v-icon:first-child {

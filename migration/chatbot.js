@@ -38,6 +38,12 @@
                 'tax-ai': [],
                 'site-ai': []
             };
+            
+            // 별점 시스템 - 위험성평가와 건설안전에만 적용
+            this.ratings = {
+                'construction-safety': {},
+                'risk-assessment': {}
+            };
 
             // Event handler binding for proper 'this' context and cleanup
             this.handleInputChange = this.handleInputChange.bind(this);
@@ -66,6 +72,9 @@
             
             // CSS 스타일 동적 생성
             this.createStyles();
+            
+            // 별점 시스템 스타일 추가
+            this.addRatingStyles();
             
             // 필요한 HTML 요소들 동적 생성
             this.createRequiredElements();
@@ -624,8 +633,6 @@
                     overflow-wrap: break-word;
                     overflow-x: hidden;
                     max-width: 350px;
-                    background: #c53030;
-                    border: 1.5px solid #c53030;
                 }
 
                 .modern-user-content::after {
@@ -637,7 +644,7 @@
                     height: 0;
                     border-top: 8px solid transparent;
                     border-bottom: 8px solid transparent;
-                    border-left: 8px solid #c53030;
+                    border-left: 8px solid currentColor;
                 }
 
                 .modern-user-text {
@@ -1524,7 +1531,7 @@
                         messagesHTML += `
                         <div class="message user">
                             <div class="modern-user-card">
-                                <div class="modern-user-content">
+                                <div class="modern-user-content" style="background: ${config.userMessageColor}; border: 1.5px solid ${config.userMessageColor};">
                                     <div class="modern-user-text">${msg.text}</div>
                                     <div class="modern-user-divider"></div>
                                     <div class="modern-user-bottom">
@@ -1534,15 +1541,19 @@
                                         </button>
                                     </div>
                                 </div>
-                                <div class="modern-user-icon">
+                                <div class="modern-user-icon" style="background: ${config.userMessageColor};">
                                     <i class="mdi mdi-account" style="color: white; font-size: 20px;"></i>
                                 </div>
                             </div>
                         </div>
                         `;
                     } else {
+                        // 메시지 ID가 없으면 생성
+                        const messageId = msg.id || `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+                        const ratingHTML = this.createRatingHTML(type, messageId);
+                        
                         messagesHTML += `
-                        <div class="message bot">
+                        <div class="message bot" data-message-id="${messageId}">
                             <div class="modern-bot-icon" style="background: ${config.botMessageColor};">
                                 <i class="mdi mdi-robot" style="color: white; font-size: 20px;"></i>
                             </div>
@@ -1551,10 +1562,16 @@
                                 <div class="modern-bot-divider" style="background: ${config.botMessageColor};"></div>
                                 <div class="modern-bot-bottom">
                                     <span class="modern-bot-time">${msg.time}</span>
-                                    <button class="modern-copy-btn bottom-right" onclick="window.chatbotApp.copyToClipboard('${msg.text.replace(/'/g, "\\'")}')" aria-label="메시지 복사">
-                                        <i class="mdi mdi-content-copy" style="font-size: 16px; color: ${config.botMessageColor};"></i>
-                                    </button>
+                                    <div style="display: flex; align-items: center;">
+                                        ${ratingHTML}
+                                        <button class="modern-copy-btn bottom-right" onclick="window.chatbotApp.copyToClipboard('${msg.text.replace(/'/g, "\\'")}')" aria-label="메시지 복사">
+                                            <i class="mdi mdi-content-copy" style="font-size: 16px; color: ${config.botMessageColor};"></i>
+                                        </button>
+                                    </div>
                                 </div>
+                                ${(type === 'construction-safety' || type === 'risk-assessment') ? `<div style="font-size: 11px; color: ${config.botMessageColor}; margin-top: 8px; text-align: right; opacity: 0.8;">
+                                    ※답변에 대해 점수를 피드백해주세요. 더 좋은 답변을 위해 노력하겠습니다.
+                                </div>` : ''}
                             </div>
                         </div>
                         `;
@@ -1576,6 +1593,9 @@
                                     <i class="mdi mdi-content-copy" style="font-size: 16px; color: ${config.botMessageColor};"></i>
                                 </button>
                             </div>
+                            ${(type === 'construction-safety' || type === 'risk-assessment') ? `<div style="font-size: 11px; color: ${config.botMessageColor}; margin-top: 8px; text-align: right; opacity: 0.8;">
+                                ※답변에 대해 점수를 피드백해주세요. 더 좋은 답변을 위해 노력하겠습니다.
+                            </div>` : ''}
                         </div>
                     </div>
                 `;
@@ -1635,6 +1655,11 @@
             // 초기 투명도 적용
             this.updateTransparency(type, this.transparency[type]);
             
+            // 저장된 별점 로드 (위험성평가와 건설안전에만)
+            if (type === 'construction-safety' || type === 'risk-assessment') {
+                this.loadSavedRatings(type);
+            }
+            
             // 오디오 장치 선택기 추가 (권한이 있는 경우)
             if (this.micPermissionGranted) {
                 // this.createAudioDeviceSelector(type); // 삭제됨
@@ -1663,7 +1688,7 @@
                     title: '위험성평가 전문가',
                     headerColor: '#1976d2',
                     botMessageColor: '#1976d2',
-                    userMessageColor: '#ff9800',
+                    userMessageColor: '#1976d2',
                     placeholder: '위험성평가에 대해 궁금한 것을 물어보세요...',
                     welcomeMessage: '안녕하세요? 저는 위험성평가 전문가입니다.\n\n작업장소와 작업공종을 알려주시면 해당 작업의 위험요인을 분석하고 평가 방법을 안내해드리겠습니다.\n\n위험성평가는 작업 전 필수 절차로, 안전한 작업 환경을 조성하는 데 중요한 역할을 합니다.'
                 },
@@ -1754,7 +1779,7 @@
             userMessage.className = 'message user';
             userMessage.innerHTML = `
                 <div class="modern-user-card">
-                    <div class="modern-user-content">
+                    <div class="modern-user-content" style="background: ${config.userMessageColor}; border: 1.5px solid ${config.userMessageColor};">
                         <div class="modern-user-text">${message}</div>
                         <div class="modern-user-divider"></div>
                         <div class="modern-user-bottom">
@@ -1764,7 +1789,7 @@
                             </button>
                         </div>
                     </div>
-                    <div class="modern-user-icon">
+                    <div class="modern-user-icon" style="background: ${config.userMessageColor};">
                         <i class="mdi mdi-account" style="color: white; font-size: 20px;"></i>
                     </div>
                 </div>
@@ -1812,9 +1837,16 @@
                 response = `카카오톡 상담으로 연결됩니다. 문의 내용을 입력하세요.`;
             }
 
+            // 메시지 ID 생성
+            const messageId = `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+            
+            // 별점 HTML 생성 (위험성평가와 건설안전에만)
+            const ratingHTML = this.createRatingHTML(type, messageId);
+
             // Bot message
             const botMessage = document.createElement('div');
             botMessage.className = 'message bot';
+            botMessage.setAttribute('data-message-id', messageId);
             botMessage.innerHTML = `
                 <div class="modern-bot-icon" style="background: ${config.botMessageColor};">
                     <i class="mdi mdi-robot" style="color: white; font-size: 20px;"></i>
@@ -1824,16 +1856,23 @@
                     <div class="modern-bot-divider" style="background: ${config.botMessageColor};"></div>
                     <div class="modern-bot-bottom">
                         <span class="modern-bot-time">${this.getCurrentTime()}</span>
-                        <button class="modern-copy-btn bottom-right" onclick="window.chatbotApp.copyToClipboard('${response.replace(/'/g, "\\'")}')" aria-label="메시지 복사">
-                            <i class="mdi mdi-content-copy" style="font-size: 16px; color: ${config.botMessageColor};"></i>
-                        </button>
+                        <div style="display: flex; align-items: center;">
+                            ${ratingHTML}
+                            <button class="modern-copy-btn bottom-right" onclick="window.chatbotApp.copyToClipboard('${response.replace(/'/g, "\\'")}')" aria-label="메시지 복사">
+                                <i class="mdi mdi-content-copy" style="font-size: 16px; color: ${config.botMessageColor};"></i>
+                            </button>
+                        </div>
                     </div>
+                    ${(type === 'construction-safety' || type === 'risk-assessment') ? `<div style="font-size: 11px; color: ${config.botMessageColor}; margin-top: 8px; text-align: right; opacity: 0.8;">
+                        ※답변에 대해 점수를 피드백해주세요. 더 좋은 답변을 위해 노력하겠습니다.
+                    </div>` : ''}
                 </div>
             `;
             messagesContainer.appendChild(botMessage);
+            
             // 메시지 배열에 추가 (최대 30개 유지)
             if (!this.messages[type]) this.messages[type] = [];
-            this.messages[type].push({ role: 'bot', text: response, time: this.getCurrentTime() });
+            this.messages[type].push({ role: 'bot', text: response, time: this.getCurrentTime(), id: messageId });
             if (this.messages[type].length > 30) this.messages[type].shift();
 
             // Scroll to bottom
@@ -2161,7 +2200,8 @@
                 minimizedChatbots: this.minimizedChatbots,
                 transparency: this.transparency,
                 messages: this.messages, // 메시지 상태도 저장
-                micPermissionGranted: this.micPermissionGranted // 마이크 권한 상태 저장
+                micPermissionGranted: this.micPermissionGranted, // 마이크 권한 상태 저장
+                ratings: this.ratings // 별점 시스템 저장
             };
             localStorage.setItem('chatbotState', JSON.stringify(state));
         }
@@ -2181,6 +2221,7 @@
                 this.transparency = state.transparency || this.transparency;
                 this.messages = state.messages || this.messages; // 메시지 상태도 로드
                 this.micPermissionGranted = state.micPermissionGranted || false; // 마이크 권한 상태 로드
+                this.ratings = state.ratings || this.ratings; // 별점 시스템 로드
             }
         }
 
@@ -2610,6 +2651,215 @@
             document.getElementById('chatbot-confirm-cancel').onclick = () => {
                 document.body.removeChild(confirmDiv);
             };
+        }
+
+        /**
+         * <pre>
+         * [별점 매기기]
+         * </pre>
+         * 
+         * @param {string} type 채팅 타입
+         * @param {string} messageId 메시지 ID
+         * @param {number} rating 별점 (1-5)
+         */
+        rateMessage(type, messageId, rating) {
+            if (!this.ratings[type]) {
+                this.ratings[type] = {};
+            }
+            
+            this.ratings[type][messageId] = rating;
+            this.saveState();
+            
+            // 별점 UI 업데이트
+            this.updateRatingUI(type, messageId, rating);
+            
+            // 추후 Supabase 연동 시 여기에 DB 저장 로직 추가
+            // this.saveRatingToDatabase(type, messageId, rating);
+        }
+
+        /**
+         * <pre>
+         * [별점 UI 업데이트]
+         * </pre>
+         * 
+         * @param {string} type 채팅 타입
+         * @param {string} messageId 메시지 ID
+         * @param {number} rating 별점 (1-5)
+         */
+        updateRatingUI(type, messageId, rating) {
+            const messageElement = document.querySelector(`[data-message-id="${messageId}"]`);
+            if (!messageElement) return;
+            
+            const ratingContainer = messageElement.querySelector('.modern-rating-container');
+            if (!ratingContainer) return;
+            
+            const starButtons = ratingContainer.querySelectorAll('.modern-star-btn');
+            starButtons.forEach((btn, index) => {
+                const starIndex = index + 1;
+                if (starIndex <= rating) {
+                    btn.classList.add('rated');
+                    btn.innerHTML = '<i class="mdi mdi-star" style="font-size: 16px; color: #ffd700;"></i>';
+                } else {
+                    btn.classList.remove('rated');
+                    btn.innerHTML = '<i class="mdi mdi-star-outline" style="font-size: 16px; color: #ccc;"></i>';
+                }
+            });
+        }
+
+        /**
+         * <pre>
+         * [저장된 별점 로드]
+         * </pre>
+         * 
+         * @param {string} type 채팅 타입
+         */
+        loadSavedRatings(type) {
+            if (!this.ratings[type]) return;
+            
+            Object.keys(this.ratings[type]).forEach(messageId => {
+                const rating = this.ratings[type][messageId];
+                this.updateRatingUI(type, messageId, rating);
+            });
+        }
+
+        /**
+         * <pre>
+         * [별점 시스템 CSS 스타일 추가]
+         * </pre>
+         */
+        addRatingStyles() {
+            const existingStyle = document.getElementById('chatbot-styles');
+            if (!existingStyle) return;
+            
+            // 이미 별점 스타일이 추가되었는지 확인
+            if (existingStyle.textContent.includes('.modern-rating-container')) {
+                return;
+            }
+            
+            const ratingStyles = `
+                /* 별점 시스템 스타일 */
+                .modern-rating-container {
+                    display: flex;
+                    align-items: center;
+                    gap: 4px;
+                    margin-right: 8px;
+                }
+
+                .modern-stars {
+                    display: flex;
+                    align-items: center;
+                    gap: 2px;
+                }
+
+                .modern-star-btn {
+                    padding: 2px !important;
+                    min-width: 20px !important;
+                    width: 20px !important;
+                    height: 20px !important;
+                    border-radius: 2px !important;
+                    transition: all 0.2s ease;
+                    background: transparent;
+                    border: none;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+
+                .modern-star-btn:hover {
+                    transform: scale(1.1);
+                }
+
+                .modern-star-btn.rated {
+                    background-color: rgba(255, 215, 0, 0.1) !important;
+                }
+
+                .modern-star-btn .mdi {
+                    transition: all 0.2s ease;
+                }
+
+                .modern-star-btn:hover .mdi {
+                    transform: scale(1.1);
+                }
+
+                /* 건설안전 별점 색상 */
+                .modern-star-btn[data-theme="construction-safety"].rated {
+                    background-color: rgba(197, 48, 48, 0.1) !important;
+                }
+
+                .modern-star-btn[data-theme="construction-safety"].rated .mdi {
+                    color: #c53030 !important;
+                }
+
+                /* 위험성평가 별점 색상 */
+                .modern-star-btn[data-theme="risk-assessment"].rated {
+                    background-color: rgba(25, 118, 210, 0.1) !important;
+                }
+
+                .modern-star-btn[data-theme="risk-assessment"].rated .mdi {
+                    color: #1976d2 !important;
+                }
+            `;
+            
+            existingStyle.textContent += ratingStyles;
+        }
+
+        /**
+         * <pre>
+         * [별점 HTML 생성]
+         * </pre>
+         * 
+         * @param {string} type 채팅 타입
+         * @param {string} messageId 메시지 ID
+         * @returns {string} 별점 HTML
+         */
+        createRatingHTML(type, messageId) {
+            // 위험성평가와 건설안전에만 별점 표시
+            if (type !== 'construction-safety' && type !== 'risk-assessment') {
+                return '';
+            }
+            
+            const currentRating = this.ratings[type] && this.ratings[type][messageId] ? this.ratings[type][messageId] : 0;
+            
+            let starsHTML = '';
+            for (let i = 1; i <= 5; i++) {
+                const isRated = i <= currentRating;
+                const starIcon = isRated ? 'mdi-star' : 'mdi-star-outline';
+                const starColor = isRated ? '#ffd700' : '#ccc';
+                
+                starsHTML += `
+                    <button class="modern-star-btn ${isRated ? 'rated' : ''}" 
+                            data-theme="${type}"
+                            onclick="window.chatbotApp.rateMessage('${type}', '${messageId}', ${i})" 
+                            aria-label="${i}점">
+                        <i class="mdi ${starIcon}" style="font-size: 16px; color: ${starColor};"></i>
+                    </button>
+                `;
+            }
+            
+            return `
+                <div class="modern-rating-container">
+                    <div class="modern-stars">
+                        ${starsHTML}
+                    </div>
+                </div>
+            `;
+        }
+
+        /**
+         * <pre>
+         * [색상 어둡게 만들기]
+         * </pre>
+         */
+        darkenColor(color, percent) {
+            const num = parseInt(color.replace('#', ''), 16);
+            const amt = Math.round(2.55 * percent);
+            const R = (num >> 16) - amt;
+            const G = (num >> 8 & 0x00FF) - amt;
+            const B = (num & 0x0000FF) - amt;
+            return '#' + (0x1000000 + (R < 255 ? R < 1 ? 0 : R : 255) * 0x10000 +
+                (G < 255 ? G < 1 ? 0 : G : 255) * 0x100 +
+                (B < 255 ? B < 1 ? 0 : B : 255)).toString(16).slice(1);
         }
     }
 

@@ -67,6 +67,26 @@
                   <div class="modern-bot-divider"></div>
                   <div class="modern-bot-bottom">
                     <span class="modern-bot-time">{{ msg.sentAt }}</span>
+                    <!-- 별점 시스템 -->
+                    <div class="modern-rating-container" v-if="!msg.isInitial">
+                      <div class="modern-stars">
+                        <v-btn
+                          v-for="star in 5"
+                          :key="star"
+                          icon
+                          size="x-small"
+                          variant="text"
+                          class="modern-star-btn"
+                          :class="{ 'rated': star <= (msg.rating || 0) }"
+                          :aria-label="`${star}점`"
+                          @click="rateMessage(msg.id, star)"
+                        >
+                          <v-icon size="16" :color="star <= (msg.rating || 0) ? '#4caf50' : '#4caf50'">
+                            {{ star <= (msg.rating || 0) ? 'mdi-star' : 'mdi-star-outline' }}
+                          </v-icon>
+                        </v-btn>
+                      </div>
+                    </div>
                     <v-btn
                       icon
                       size="x-small"
@@ -199,8 +219,8 @@ const props = defineProps<{ bShow: boolean }>()
 const emit = defineEmits<{ (e: 'close'): void; (e: 'send', content: string): void }>()
 
 const input = ref('')
-// 메시지 타입에 sentAt 추가
-const messages = ref<{ id: string; content: string; isUser: boolean; sentAt?: string }[]>([])
+// 메시지 타입에 sentAt, rating, isInitial 추가
+const messages = ref<{ id: string; content: string; isUser: boolean; sentAt?: string; rating?: number; isInitial?: boolean }[]>([])
 const bShowCopySnackbar = ref(false)
 const messagesArea = ref<HTMLElement | null>(null)
 const messageList = ref<HTMLElement | null>(null)
@@ -499,6 +519,38 @@ function scrollToBottom() {
   }
 }
 
+// 별점 시스템 함수
+function rateMessage(messageId: string, rating: number) {
+  const message = messages.value.find(msg => msg.id === messageId)
+  if (message && !message.isUser) {
+    message.rating = rating
+    
+    // 로컬 스토리지에 별점 저장
+    const ratings = JSON.parse(localStorage.getItem('site_chatbot_ratings') || '{}')
+    ratings[messageId] = rating
+    localStorage.setItem('site_chatbot_ratings', JSON.stringify(ratings))
+    
+    // 추후 Supabase 연동 시 여기에 저장 로직 추가
+    console.log(`메시지 ${messageId}에 ${rating}점 평가`)
+  }
+}
+
+// 저장된 별점 로드 함수
+function loadSavedRatings() {
+  try {
+    const ratings = JSON.parse(localStorage.getItem('site_chatbot_ratings') || '{}')
+    
+    // 각 메시지에 저장된 별점 적용
+    messages.value.forEach(message => {
+      if (!message.isUser && ratings[message.id]) {
+        message.rating = ratings[message.id]
+      }
+    })
+  } catch (error) {
+    console.error('별점 로드 중 오류:', error)
+  }
+}
+
 // 채팅창 닫기
 function onClose() {
   emit('close')
@@ -561,8 +613,12 @@ onMounted(() => {
       hour: '2-digit', 
       minute: '2-digit',
       hour12: false 
-    })
+    }),
+    isInitial: true
   })
+  
+  // 저장된 별점 로드
+  loadSavedRatings()
   
   // 초기 슬롯 위치 업데이트
   updateSlotPosition()
@@ -1190,6 +1246,46 @@ watch(minimizedChatbotsState, () => {
   white-space: nowrap;
   letter-spacing: 0.01em;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* 별점 시스템 스타일 */
+.modern-rating-container {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-right: 8px;
+}
+
+.modern-stars {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.modern-star-btn {
+  padding: 2px !important;
+  min-width: 20px !important;
+  width: 20px !important;
+  height: 20px !important;
+  border-radius: 2px !important;
+  transition: all 0.2s ease;
+}
+
+.modern-star-btn:hover {
+  background-color: rgba(76, 175, 80, 0.1) !important;
+  transform: scale(1.1);
+}
+
+.modern-star-btn.rated {
+  background-color: rgba(76, 175, 80, 0.1) !important;
+}
+
+.modern-star-btn .v-icon {
+  transition: all 0.2s ease;
+}
+
+.modern-star-btn:hover .v-icon {
+  transform: scale(1.1);
 }
 
 .minimized-content .v-icon:first-child {
