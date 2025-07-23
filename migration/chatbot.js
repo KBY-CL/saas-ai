@@ -1286,12 +1286,28 @@
 
                 // 샘플 미리보기/시간/뱃지 데이터
                 const chatList = [
-                  { id: 'construction-safety', label: '건설안전 A.I', icon: 'mdi-robot', theme: 'construction-safety', preview: '안전 및 대책 관련 문의', time: '오후 4:47', badge: 1 },
-                  { id: 'risk-assessment', label: '위험성평가 A.I', icon: 'mdi-shield-check', theme: 'risk-assessment', preview: '시스템사용방법 관련 문의', time: '오후 4:40', badge: 0 },
-                  { id: 'tax-ai', label: '세금계산서 A.I', icon: 'mdi-calculator', theme: 'tax-ai', preview: '세금계산서 관련 문의', time: '오후 4:14', badge: 2 },
-                  { id: 'site-ai', label: '현장개통/해지 A.I', icon: 'mdi-office-building', theme: 'site-ai', preview: '현장개통/해지 안내', time: '오후 4:10', badge: 0 },
-                  { id: 'kakao-link', label: '카카오톡 상담', icon: 'mdi-message-text', theme: 'risk-assessment', preview: '카카오톡으로 바로 상담하기', time: '', badge: 0, isExternal: true, link: 'https://pf.kakao.com/_cxcxdxfs/chat' }
+                  { id: 'construction-safety', label: '건설안전 A.I', icon: 'mdi-robot', theme: 'construction-safety', preview: '안전 및 대책 관련 문의', badge: 1 },
+                  { id: 'risk-assessment', label: '위험성평가 A.I', icon: 'mdi-shield-check', theme: 'risk-assessment', preview: '시스템사용방법 관련 문의', badge: 0 },
+                  { id: 'tax-ai', label: '세금계산서 A.I', icon: 'mdi-calculator', theme: 'tax-ai', preview: '세금계산서 관련 문의', badge: 2 },
+                  { id: 'site-ai', label: '현장개통/해지 A.I', icon: 'mdi-office-building', theme: 'site-ai', preview: '현장개통/해지 안내', badge: 0 },
+                  { id: 'kakao-link', label: '카카오톡 상담', icon: 'mdi-message-text', theme: 'risk-assessment', preview: '카카오톡으로 바로 상담하기', badge: 0, isExternal: true, link: 'https://pf.kakao.com/_cxcxdxfs/chat' }
                 ];
+
+                // 각 채팅방의 마지막 메시지 시간 구하기
+                const getLastMessageTime = (id) => {
+                  const msgs = this.messages[id] || [];
+                  if (msgs.length === 0) return '';
+                  const last = msgs[msgs.length - 1];
+                  if (!last.time) return '';
+                  // 이미 포맷된 문자열이면 그대로, Date 객체면 포맷
+                  if (typeof last.time === 'string') return last.time;
+                  const d = new Date(last.time);
+                  const h = d.getHours();
+                  const m = d.getMinutes();
+                  const isPM = h >= 12;
+                  const hour12 = h % 12 === 0 ? 12 : h % 12;
+                  return `${isPM ? '오후' : '오전'} ${hour12}:${m.toString().padStart(2, '0')}`;
+                };
 
                 menuContainer.innerHTML = `
                   <div class="floating-menu-root" style="width:420px; min-width:420px; max-width:420px;">
@@ -1317,7 +1333,7 @@
                           <button class="header-minimize-btn" onclick="window.chatbotApp.handleMinimize()" aria-label="최소화">
                             <i class="mdi mdi-minus" style="font-size: 22px; color: #333;"></i>
                           </button>
-                          <i class="mdi mdi-window-close" style="font-size: 22px; color: #333; cursor:pointer;" onclick="window.chatbotApp.handleMinimize()"></i>
+                          <i class="mdi mdi-window-close" style="font-size: 22px; color: #333; cursor:pointer;" onclick="window.chatbotApp.handleRootClose()"></i>
                         </div>
                       </div>
                       <div style="width:100%;height:100%;display:flex;flex-direction:column;">
@@ -1348,7 +1364,7 @@
                                   <div class="chat-info">
                                     <div class="chat-title-row">
                                       <span class="chat-title">${item.label}</span>
-                                      <span class="chat-time">${item.time}</span>
+                                      <span class="chat-time">${getLastMessageTime(item.id)}</span>
                                     </div>
                                     <div class="chat-preview">${item.preview}</div>
                                   </div>
@@ -2025,15 +2041,7 @@
         handleMinimize() {
             this.bShowFloatingMenu = false;
             this.renderFloatingMenu();
-            // 최소화된 챗봇 버튼은 유지, closeAllMinimizedChatbots() 호출 제거
-            // 모든 채팅 내역 초기화
-            this.messages = {
-                'construction-safety': [],
-                'risk-assessment': [],
-                'tax-ai': [],
-                'site-ai': []
-            };
-            // localStorage에서도 채팅 내역 제거
+            // 플로팅 메뉴만 숨기고 채팅방 정보는 유지
             this.saveState();
         }
 
@@ -2484,6 +2492,60 @@
             this.openChatRoomId = id;
             this.createChatLayer(id); // 채팅 레이어를 즉시 생성
             this.renderFloatingMenu();
+        }
+
+        /**
+         * <pre>
+         * [루트 채팅창 닫기(X) - 대화내용 초기화 알림]
+         * </pre>
+         */
+        handleRootClose() {
+            // 커스텀 confirm 다이얼로그 생성
+            const confirmDiv = document.createElement('div');
+            // 플로팅메뉴 위치 기준으로 알림창 위치 계산
+            const menu = document.querySelector('.floating-menu-root');
+            let left = '50vw', top = '50vh', translate = '-50%, -50%';
+            if (menu) {
+                const rect = menu.getBoundingClientRect();
+                // 오른쪽으로 1%만 이동
+                const offset = window.innerWidth * 0.01;
+                left = `${rect.left + rect.width/2 + offset}px`;
+                top = `${rect.top + rect.height/2}px`;
+                translate = '-50%, -50%';
+            }
+            confirmDiv.style.position = 'fixed';
+            confirmDiv.style.left = left;
+            confirmDiv.style.top = top;
+            confirmDiv.style.transform = `translate(${translate})`;
+            confirmDiv.style.background = 'rgba(0,0,0,0.25)';
+            confirmDiv.style.zIndex = '99999';
+            confirmDiv.innerHTML = `
+                <div style="background:#fff;padding:32px 28px 24px 28px;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.18);min-width:320px;max-width:90vw;text-align:center;">
+                  <div style="font-size:18px;font-weight:600;margin-bottom:18px;">대화내용이 모두 초기화 됩니다</div>
+                  <div style="display:flex;justify-content:center;gap:18px;margin-top:12px;">
+                    <button id="chatbot-confirm-ok" style="background:#1976d2;color:#fff;font-weight:600;padding:8px 24px;border:none;border-radius:6px;font-size:15px;cursor:pointer;">확인</button>
+                    <button id="chatbot-confirm-cancel" style="background:#ececec;color:#333;font-weight:600;padding:8px 24px;border:none;border-radius:6px;font-size:15px;cursor:pointer;">취소</button>
+                  </div>
+                </div>
+            `;
+            document.body.appendChild(confirmDiv);
+            document.getElementById('chatbot-confirm-ok').onclick = () => {
+                // 모든 대화내용 및 minimized 상태 초기화
+                Object.keys(this.messages).forEach(k => { this.messages[k] = []; });
+                this.minimizedChatbots = [];
+                // 모든 채팅방의 minimized 상태도 초기화
+                Object.keys(this.chatLayers).forEach(k => {
+                    this.chatLayers[k].isMinimized = false;
+                    this.chatLayers[k].bShow = false;
+                });
+                this.saveState();
+                // 루트 채팅창 닫기
+                this.handleMinimize();
+                document.body.removeChild(confirmDiv);
+            };
+            document.getElementById('chatbot-confirm-cancel').onclick = () => {
+                document.body.removeChild(confirmDiv);
+            };
         }
     }
 
