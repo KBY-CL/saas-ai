@@ -1,4 +1,4 @@
-// AI 건설안전 전문가 챗봇 - 순수 JavaScript 마이그레이션
+// AI 건설안전 도우미 챗봇 - 순수 JavaScript 마이그레이션
 // 원본 Vue.js + Vuetify 3 프로젝트를 순수 JavaScript로 완전 이전
 
 (function() {
@@ -133,7 +133,7 @@
             const style = document.createElement('style');
             style.id = 'chatbot-styles';
             style.textContent = `
-                /* AI 건설안전 전문가 챗봇 - 동적 CSS 스타일 */
+                /* AI 건설안전 도우미 챗봇 - 동적 CSS 스타일 */
 
                 /* 기본 리셋 및 폰트 */
                 * {
@@ -1258,6 +1258,34 @@
                     transform: scale(1.1);
                     transition: transform 0.2s ease-in-out;
                 }
+
+                /* 현장개통/해지 버튼 HTML 생성 함수 */
+                .site-ai-button-container {
+                    display: flex;
+                    gap: 12px;
+                    margin-top: 12px;
+                }
+
+                .site-ai-btn {
+                    background: #4caf50;
+                    color: #fff;
+                    border: none;
+                    border-radius: 8px;
+                    padding: 12px 16px;
+                    font-size: 14px;
+                    font-weight: 500;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                }
+
+                .site-ai-btn:hover {
+                    background: #388e3c;
+                }
+
+                /* 버튼 스타일 추가 (createStyles 등에서) */
+                .site-ai-button-container-vertical { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+                .site-ai-btn-vertical { background: #4caf50; color: #fff; border: none; border-radius: 8px; padding: 12px 16px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s; text-align: left; display: flex; align-items: center; }
+                .site-ai-btn-vertical:hover { background: #388e3c; }
             `;
             document.head.appendChild(style);
         }
@@ -1275,7 +1303,7 @@
                 mainContainer.innerHTML = `
                     <div class="content-area">
                         <div class="welcome-card">
-                            <h1 class="welcome-title">AI 건설안전 전문가 챗봇</h1>
+                            <h1 class="welcome-title">AI 건설안전 도우미 챗봇</h1>
                             <p class="welcome-text">플로팅 메뉴가 화면 우측에 표시됩니다.</p>
                             <p class="welcome-text">각 버튼을 클릭하여 기능을 테스트해보세요.</p>
                         </div>
@@ -1577,7 +1605,7 @@
                 }
             } else {
                 // welcome message만 표시
-                const welcomeText = type === 'tax-ai' ? '안녕하세요! 세금계산서 A.I입니다.\n\n어떤 세무 업무에 대해 도움이 필요하신가요?\n아래 버튼을 클릭하여 선택해주세요.\n\n' : config.welcomeMessage;
+                const welcomeText = type === 'tax-ai' ? '안녕하세요! 세금계산서 도우미입니다.\n\n어떤 세무 업무에 대해 도움이 필요하신가요?\n아래 버튼을 클릭하여 선택해주세요.\n\n' : config.welcomeMessage;
                 
                 messagesHTML = `
                     <div class="message bot">
@@ -1696,15 +1724,15 @@
                     welcomeMessage: '안녕하세요? 저는 건설안전 전문가입니다.\n\n오늘 작업장소와 작업공종을 알려주시면 위험요인과 안전대책을 알려드리겠습니다.\n\n(예시: 서울에서 지하 3층: 방수 및 미장 작업, 지상 7층: 철근콘크리트를 위한 형틀설치, 철근배근, 전선관배관 작업을 타워크레인을 이용해서 진행합니다)'
                 },
                 'risk-assessment': {
-                    title: '위험성평가 전문가',
+                    title: '위험성평가 도우미',
                     headerColor: '#1976d2',
                     botMessageColor: '#1976d2',
                     userMessageColor: '#1976d2',
                     placeholder: '위험성평가에 대해 궁금한 것을 물어보세요...',
-                    welcomeMessage: '안녕하세요? 저는 위험성평가 전문가입니다.\n\n작업장소와 작업공종을 알려주시면 해당 작업의 위험요인을 분석하고 평가 방법을 안내해드리겠습니다.\n\n위험성평가는 작업 전 필수 절차로, 안전한 작업 환경을 조성하는 데 중요한 역할을 합니다.'
+                    welcomeMessage: '안녕하세요? 저는 위험성평가 도우미입니다.\n\n작업장소와 작업공종을 알려주시면 해당 작업의 위험요인을 분석하고 평가 방법을 안내해드리겠습니다.\n\n위험성평가는 작업 전 필수 절차로, 안전한 작업 환경을 조성하는 데 중요한 역할을 합니다.'
                 },
                 'tax-ai': {
-                    title: '세금계산서 A.I',
+                    title: '세금계산서 도우미',
                     headerColor: '#ff9800',
                     botMessageColor: '#ff8f00',
                     userMessageColor: '#4caf50',
@@ -1712,12 +1740,12 @@
                     welcomeMessage: ''
                 },
                 'site-ai': {
-                    title: '현장개통/해지 전문가',
+                    title: '현장개통/해지 도우미',
                     headerColor: '#4caf50',
                     botMessageColor: '#4caf50',
                     userMessageColor: '#2196f3',
                     placeholder: '현장개통/해지에 대해 궁금한 것을 물어보세요...',
-                    welcomeMessage: '안녕하세요? 저는 현장개통/해지 전문가입니다.\n\n현장개통과 해지 절차에 대해 안내해드리겠습니다.\n\n현장개통은 새로운 건설현장을 시작할 때 필요한 절차이며, 해지는 작업 완료 후 현장을 정리하는 절차입니다.\n\n어떤 부분에 대해 궁금하신가요?'
+                    welcomeMessage: '안녕하세요! 현장개통/해지 A.I입니다.\n\n현장개통/해제 관련 문의 유형을 선택해주세요.\n' + window.createSiteAiButtonsHTML()
                 },
                 'kakao': {
                     title: '카카오톡 상담',
@@ -1844,11 +1872,11 @@
                     response = `안녕하세요! 건설안전 전문가입니다.\n\n작업장소와 작업공종을 구체적으로 알려주시면 해당 작업에 맞는 위험요인과 안전대책을 상세히 안내해드리겠습니다.\n\n예시: "서울에서 지하 3층: 방수 및 미장 작업, 지상 7층: 철근콘크리트를 위한 형틀설치, 철근배근, 전선관배관 작업을 타워크레인을 이용해서 진행합니다"`;
                 }
             } else if (type === 'risk-assessment') {
-                response = `안녕하세요! 위험성평가 전문가입니다.\n\n작업장소와 작업공종을 알려주시면 해당 작업의 위험요인을 분석하고 평가 방법을 안내해드리겠습니다.\n\n위험성평가는 작업 전 필수 절차로, 안전한 작업 환경을 조성하는 데 중요한 역할을 합니다.`;
+                response = `안녕하세요! 위험성평가 도우미입니다.\n\n작업장소와 작업공종을 알려주시면 해당 작업의 위험요인을 분석하고 평가 방법을 안내해드리겠습니다.\n\n위험성평가는 작업 전 필수 절차로, 안전한 작업 환경을 조성하는 데 중요한 역할을 합니다.`;
             } else if (type === 'tax-ai') {
-                response = `안녕하세요! 세금계산서 A.I입니다.\n\n어떤 세무 업무에 대해 도움이 필요하신가요? 아래 버튼을 클릭하여 선택해주세요.`;
+                response = `안녕하세요! 세금계산서 도우미입니다.\n\n어떤 세무 업무에 대해 도움이 필요하신가요? 아래 버튼을 클릭하여 선택해주세요.`;
             } else if (type === 'site-ai') {
-                response = `안녕하세요! 현장개통/해지 전문가입니다.\n\n현장개통과 해지 절차에 대해 안내해드리겠습니다.\n\n현장개통은 새로운 건설현장을 시작할 때 필요한 절차이며, 해지는 작업 완료 후 현장을 정리하는 절차입니다.\n\n어떤 부분에 대해 궁금하신가요?`;
+                response = `안녕하세요! 현장개통/해지 도우미입니다.\n\n현장개통과 해지 절차에 대해 안내해드리겠습니다.\n\n현장개통은 새로운 건설현장을 시작할 때 필요한 절차이며, 해지는 작업 완료 후 현장을 정리하는 절차입니다.\n\n어떤 부분에 대해 궁금하신가요?`;
             } else if (type === 'kakao') {
                 response = `카카오톡 상담으로 연결됩니다. 문의 내용을 입력하세요.`;
             }
@@ -3414,4 +3442,18 @@
 
     // Export for global access
     window.ConstructionSafetyChatbot = ChatbotApp;
+
+    // --- 현장개통/해지 버튼 HTML 생성 함수 ---
+    window.createSiteAiButtonsHTML = function() {
+        return `
+            <div class="site-ai-button-container-vertical">
+                <button class="site-ai-btn-vertical" onclick="window.chatbotApp.handleSiteAiButtonClick('신청')">
+                    <i class='mdi mdi-file-document-edit-outline' style='margin-right:8px; font-size:18px; vertical-align:middle;'></i>현장개통/해제 신청
+                </button>
+                <button class="site-ai-btn-vertical" onclick="window.chatbotApp.handleSiteAiButtonClick('조회')">
+                    <i class='mdi mdi-file-search-outline' style='margin-right:8px; font-size:18px; vertical-align:middle;'></i>신청/해지서 조회
+                </button>
+            </div>
+        `;
+    };
 })(); 
