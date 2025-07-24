@@ -76,6 +76,9 @@
             // 별점 시스템 스타일 추가
             this.addRatingStyles();
             
+            // 현장개통/해제 테마 설정
+            this.setSiteAiTheme();
+            
             // 필요한 HTML 요소들 동적 생성
             this.createRequiredElements();
             
@@ -1286,6 +1289,39 @@
                 .site-ai-button-container-vertical { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
                 .site-ai-btn-vertical { background: #4caf50; color: #fff; border: none; border-radius: 8px; padding: 12px 16px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s; text-align: left; display: flex; align-items: center; }
                 .site-ai-btn-vertical:hover { background: #388e3c; }
+
+                /* 팝업 버튼 호버 효과 */
+                #site-ai-popup button {
+                    transition: background 0.18s, color 0.18s, box-shadow 0.18s, transform 0.15s;
+                }
+                #site-ai-download-btn:hover {
+                    background: #218838;
+                    color: #fff;
+                    box-shadow: 0 4px 16px rgba(33,136,56,0.25);
+                    transform: scale(1.04);
+                }
+                #site-ai-upload-btn:hover {
+                    background: #0d47a1;
+                    color: #fff;
+                    box-shadow: 0 4px 16px rgba(13,71,161,0.22);
+                    transform: scale(1.04);
+                }
+                #site-ai-close-btn:hover {
+                    background: #bdbdbd;
+                    color: #111;
+                    box-shadow: 0 4px 16px rgba(100,100,100,0.18);
+                    transform: scale(1.04);
+                }
+
+                /* 현장개통/해제 테마 스타일 */
+                .site-ai-theme.modern-bot-icon {
+                    background: var(--site-ai-primary, #4caf50) !important;
+                }
+
+                .site-ai-theme.modern-bot-content {
+                    border: 1.5px solid var(--site-ai-primary, #4caf50) !important;
+                    background: var(--site-ai-background, #e6f4ea) !important;
+                }
             `;
             document.head.appendChild(style);
         }
@@ -1585,7 +1621,7 @@
                             <div class="modern-bot-icon" style="background: ${config.botMessageColor};">
                                 <i class="mdi mdi-robot" style="color: white; font-size: 20px;"></i>
                             </div>
-                            <div class="modern-bot-content" style="border: 1.5px solid ${config.botMessageColor}; background-color: ${config.botMessageColor === '#dc3545' ? '#fff0f0' : config.botMessageColor === '#1976d2' ? '#e3f2fd' : config.botMessageColor === '#4caf50' ? '#f1f8e9' : config.botMessageColor === '#fee500' ? '#fff9c4' : '#fff0f0'};">
+                            <div class="modern-bot-content" style="border: 1.5px solid ${config.botMessageColor}; background-color: ${this.getBotBackgroundColor(type, config.botMessageColor)};">
                                 <div class="modern-bot-text">${msg.text}</div>
                                 <div class="modern-bot-divider" style="background: ${config.botMessageColor};"></div>
                                 <div class="modern-bot-bottom">
@@ -1607,18 +1643,31 @@
                 // welcome message만 표시
                 const welcomeText = type === 'tax-ai' ? '안녕하세요! 세금계산서 도우미입니다.\n\n어떤 세무 업무에 대해 도움이 필요하신가요?\n아래 버튼을 클릭하여 선택해주세요.\n\n' : config.welcomeMessage;
                 
-                messagesHTML = `
-                    <div class="message bot">
-                        <div class="modern-bot-icon" style="background: ${config.botMessageColor};">
-                            <i class="mdi mdi-robot" style="color: white; font-size: 20px;"></i>
+                // site-ai 웰컴 메시지도 연한 초록 테마로 통일
+                if (type === 'site-ai') {
+                    messagesHTML = `
+                        <div class="message bot">
+                            <div class="modern-bot-icon" style="background: #4caf50;">
+                                <i class="mdi mdi-robot" style="color: white; font-size: 20px;"></i>
+                            </div>
+                            <div class="modern-bot-content" style="border: 1.5px solid #4caf50; background-color: #e6f4ea;">
+                                <div class="modern-bot-text">${welcomeText}</div>
+                            </div>
                         </div>
-                        <div class="modern-bot-content" style="border: 1.5px solid ${config.botMessageColor}; background-color: ${config.botMessageColor === '#dc3545' ? '#fff0f0' : config.botMessageColor === '#1976d2' ? '#e3f2fd' : config.botMessageColor === '#4caf50' ? '#f1f8e9' : config.botMessageColor === '#fee500' ? '#fff9c4' : '#fff0f0'};">
-                            <div class="modern-bot-text">${welcomeText}</div>
-                            ${type === 'tax-ai' ? this.createTaxButtonsHTML() : ''}
-
+                    `;
+                } else {
+                    messagesHTML = `
+                        <div class="message bot">
+                            <div class="modern-bot-icon" style="background: ${config.botMessageColor};">
+                                <i class="mdi mdi-robot" style="color: white; font-size: 20px;"></i>
+                            </div>
+                            <div class="modern-bot-content" style="border: 1.5px solid ${config.botMessageColor}; background-color: ${this.getBotBackgroundColor(type, config.botMessageColor)};">
+                                <div class="modern-bot-text">${welcomeText}</div>
+                                ${type === 'tax-ai' ? this.createTaxButtonsHTML() : ''}
+                            </div>
                         </div>
-                    </div>
-                `;
+                    `;
+                }
             }
 
             chatLayer.innerHTML = `
@@ -1719,7 +1768,7 @@
                     title: '건설안전 전문가',
                     headerColor: '#c53030',
                     botMessageColor: '#dc2626',
-                    userMessageColor: '#ff6b35',
+                    userMessageColor: '#c53030',
                     placeholder: '건설안전, 건설법 등 궁금한 것을 물어보세요...',
                     welcomeMessage: '안녕하세요? 저는 건설안전 전문가입니다.\n\n오늘 작업장소와 작업공종을 알려주시면 위험요인과 안전대책을 알려드리겠습니다.\n\n(예시: 서울에서 지하 3층: 방수 및 미장 작업, 지상 7층: 철근콘크리트를 위한 형틀설치, 철근배근, 전선관배관 작업을 타워크레인을 이용해서 진행합니다)'
                 },
@@ -1742,7 +1791,7 @@
                 'site-ai': {
                     title: '현장개통/해지 도우미',
                     headerColor: '#4caf50',
-                    botMessageColor: '#4caf50',
+                    botMessageColor: '#4caf50', // 초록색으로 변경하여 조건문에 포함
                     userMessageColor: '#2196f3',
                     placeholder: '현장개통/해지에 대해 궁금한 것을 물어보세요...',
                     welcomeMessage: '안녕하세요! 현장개통/해지 A.I입니다.\n\n현장개통/해제 관련 문의 유형을 선택해주세요.\n' + window.createSiteAiButtonsHTML()
@@ -2776,6 +2825,43 @@
 
         /**
          * <pre>
+         * [봇 메시지 배경색 계산]
+         * </pre>
+         * 
+         * @param {string} type 채팅 타입
+         * @param {string} botMessageColor 봇 메시지 색상
+         * @returns {string} 배경색
+         */
+        getBotBackgroundColor(type, botMessageColor) {
+            // 현장개통/해지 도우미는 특별한 연한 초록색 적용
+            if (type === 'site-ai') {
+                return '#e6f4ea';
+            }
+            
+            // 채팅방별 브랜드 색상에 맞는 연한 배경색 매핑
+            const backgroundColorMap = {
+                '#dc3545': '#fff0f0',  // 건설안전 - 연한 빨간색
+                '#1976d2': '#e3f2fd',  // 위험성평가 - 연한 파란색
+                '#4caf50': '#f1f8e9',  // 초록색 - 연한 초록색
+                '#fee500': '#fff9c4',  // 카카오톡 - 연한 노란색
+                '#ff8f00': '#fff0f0'   // 세금계산서 - 기본값
+            };
+            
+            return backgroundColorMap[botMessageColor] || '#fff0f0';
+        }
+
+        /**
+         * <pre>
+         * [현장개통/해제 테마 CSS 변수 설정]
+         * </pre>
+         */
+        setSiteAiTheme() {
+            document.documentElement.style.setProperty('--site-ai-primary', '#4caf50');
+            document.documentElement.style.setProperty('--site-ai-background', '#e6f4ea');
+        }
+
+        /**
+         * <pre>
          * [별점 시스템 CSS 스타일 추가]
          * </pre>
          */
@@ -3428,6 +3514,375 @@
                 pad(now.getMinutes()) +
                 pad(now.getSeconds()) +
                 pad(now.getMilliseconds(), 3);
+        }
+
+        handleSiteAiButtonClick(type) {
+            if (type === '신청') {
+                const existingPopup = document.getElementById('site-ai-popup');
+                if (existingPopup) existingPopup.remove();
+
+                const chatLayer = document.querySelector('.chat-layer[data-chat-type="site-ai"]');
+                if (!chatLayer) return;
+
+                const rect = chatLayer.getBoundingClientRect();
+
+                const popup = document.createElement('div');
+                popup.id = 'site-ai-popup';
+                popup.style.position = 'fixed';
+                popup.style.left = `${rect.left + rect.width / 2}px`;
+                popup.style.top = `${rect.top + rect.height / 2}px`;
+                popup.style.transform = 'translate(-50%, -50%)';
+                popup.style.background = 'rgba(0,0,0,0.25)';
+                popup.style.zIndex = '99999';
+                popup.style.width = `${rect.width}px`;
+                popup.style.height = `${rect.height}px`;
+                popup.style.display = 'flex';
+                popup.style.alignItems = 'center';
+                popup.style.justifyContent = 'center';
+                popup.innerHTML = `
+                    <div style="background:#fff;padding:32px 28px 24px 28px;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.18);min-width:320px;max-width:90vw;text-align:center;">
+                      <div style="font-size:18px;font-weight:600;margin-bottom:18px;">현장개통/해지 신청 안내</div>
+                      <div style="font-size:15px;line-height:1.7;margin-bottom:18px;">
+                        현장개통 또는 해지를 원하실 경우, 아래의 신청/해지서를 다운로드하여 작성 후<br>
+                        <span style='color:#1976d2;font-weight:700;'><b>신청/해지서 업로드</b></span> 버튼을 클릭하셔서 업로드 하시면 됩니다.<br><br>
+                        <span style=\"font-size:13px;font-weight:700;color:#222;\">※ 신청/해지서에는 현장명, 담당자명, 연락처, 요청내용 등이 포함되어야 합니다.</span>
+                      </div>
+                      <div style="display:flex;justify-content:center;gap:12px;margin-top:18px;">
+                        <button id="site-ai-download-btn" style="background:#4caf50;color:#fff;font-weight:600;padding:10px 18px;border:none;border-radius:6px;font-size:15px;cursor:pointer;">신청/해지서 다운로드</button>
+                        <button id="site-ai-upload-btn" style="background:#1976d2;color:#fff;font-weight:600;padding:10px 18px;border:none;border-radius:6px;font-size:15px;cursor:pointer;">신청/해지서 업로드</button>
+                        <button id="site-ai-close-btn" style="background:#ececec;color:#333;font-weight:600;padding:10px 18px;border:none;border-radius:6px;font-size:15px;cursor:pointer;">닫기</button>
+                      </div>
+                    </div>
+                `;
+                document.body.appendChild(popup);
+                document.getElementById('site-ai-close-btn').onclick = () => {
+                    popup.remove();
+                };
+                // 다운로드 버튼 이벤트 (text 응답)
+                document.getElementById('site-ai-download-btn').onclick = () => {
+                    fetch('https://ai-chatbot.myconst.com/webhook/chatbot/project', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ actionNo: 1 })
+                    })
+                    .then(res => res.ok ? res.text() : Promise.reject(res))
+                    .then(resultText => {
+                        if (resultText && resultText.startsWith('http')) {
+                            window.open(resultText, '_blank');
+                        } else {
+                            alert(resultText || '다운로드 링크를 받을 수 없습니다. 관리자에게 문의해 주세요.');
+                        }
+                    })
+                    .catch(() => {
+                        alert('다운로드 요청에 실패했습니다. 다시 시도해 주세요.');
+                    });
+                };
+                // 업로드 버튼 이벤트 (파일 업로드)
+                document.getElementById('site-ai-upload-btn').onclick = () => {
+                    const fileInput = document.createElement('input');
+                    fileInput.type = 'file';
+                    fileInput.accept = '*/*';
+                    fileInput.onchange = () => {
+                        if (fileInput.files && fileInput.files.length > 0) {
+                            // 업로드 버튼, 다운로드 버튼, 닫기 버튼 비활성화
+                            const uploadBtn = document.getElementById('site-ai-upload-btn');
+                            const downloadBtn = document.getElementById('site-ai-download-btn');
+                            const closeBtn = document.getElementById('site-ai-close-btn');
+                            if (uploadBtn) uploadBtn.disabled = true;
+                            if (downloadBtn) downloadBtn.disabled = true;
+                            if (closeBtn) closeBtn.disabled = true;
+                            // 로딩바 추가
+                            let loading = document.getElementById('site-ai-loading');
+                            if (!loading) {
+                                loading = document.createElement('div');
+                                loading.id = 'site-ai-loading';
+                                loading.style.display = 'flex';
+                                loading.style.justifyContent = 'center';
+                                loading.style.alignItems = 'center';
+                                loading.style.marginTop = '24px';
+                                loading.innerHTML = `
+                                  <svg width="48" height="48" viewBox="22 22 44 44" style="animation: rotate 2s linear infinite;">
+                                    <circle cx="44" cy="44" r="20" fill="none" stroke="#1976d2" stroke-width="4" stroke-linecap="round" stroke-dasharray="90,150" stroke-dashoffset="0" style="animation: dash 1.5s ease-in-out infinite;"></circle>
+                                  </svg>
+                                  <style>
+                                  @keyframes rotate { 100% { transform: rotate(360deg); } }
+                                  @keyframes dash {
+                                    0% { stroke-dasharray: 1,150; stroke-dashoffset: 0; }
+                                    50% { stroke-dasharray: 90,150; stroke-dashoffset: -35; }
+                                    100% { stroke-dasharray: 90,150; stroke-dashoffset: -124; }
+                                  }
+                                  </style>
+                                `;
+                                const popupInner = document.querySelector('#site-ai-popup > div');
+                                if (popupInner) popupInner.appendChild(loading);
+                            }
+                            const formData = new FormData();
+                            formData.append('file', fileInput.files[0]);
+                            formData.append('actionNo', 2);
+                            fetch('https://ai-chatbot.myconst.com/webhook/chatbot/project', {
+                                method: 'POST',
+                                body: formData
+                            })
+                            .then(res => res.ok ? res.text() : Promise.reject(res))
+                            .then(resultText => {
+                                let result;
+                                try {
+                                    result = JSON.parse(resultText);
+                                } catch (e) {
+                                    // 실패 안내를 챗봇 메시지로 출력
+                                    const chatLayer = document.querySelector('.chat-layer[data-chat-type="site-ai"]');
+                                    if (chatLayer) {
+                                        const messagesContainer = chatLayer.querySelector('.chat-messages');
+                                        const config = window.chatbotApp.getChatConfig('site-ai');
+                                        const msg = document.createElement('div');
+                                        msg.className = 'message bot';
+                                        msg.innerHTML = `
+                                            <div class=\"modern-bot-icon\" style=\"background: ${config.botMessageColor};\">
+                                                <i class=\"mdi mdi-robot\" style=\"color: white; font-size: 20px;\"></i>
+                                            </div>
+                                            <div class=\"modern-bot-content\" style=\"border: 1.5px solid ${config.botMessageColor}; background-color: ${window.chatbotApp.getBotBackgroundColor('site-ai', config.botMessageColor)};\">
+                                                <div class=\"modern-bot-text\">
+                                                    ${resultText || '업로드 결과를 확인할 수 없습니다.'}
+                                                </div>
+                                            </div>
+                                        `;
+                                        messagesContainer.appendChild(msg);
+                                        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                                    }
+                                    // 로딩바 제거, 팝업 닫기
+                                    if (loading) loading.remove();
+                                    const popup = document.getElementById('site-ai-popup');
+                                    if (popup) popup.remove();
+                                    return;
+                                }
+                                if (result && result.success && result.response) {
+                                    const chatLayer = document.querySelector('.chat-layer[data-chat-type="site-ai"]');
+                                    if (chatLayer) {
+                                        const messagesContainer = chatLayer.querySelector('.chat-messages');
+                                        const config = window.chatbotApp.getChatConfig('site-ai');
+                                        const msg = document.createElement('div');
+                                        msg.className = 'message bot';
+                                        msg.innerHTML = `
+                                            <div class=\"modern-bot-icon site-ai-theme\">
+                                                <i class=\"mdi mdi-robot\" style=\"color: white; font-size: 20px;\"></i>
+                                            </div>
+                                            <div class=\"modern-bot-content site-ai-theme\">
+                                                <div class=\"modern-bot-text\">
+                                                    ${result.response}
+                                                </div>
+                                            </div>
+                                        `;
+                                        messagesContainer.appendChild(msg);
+                                        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                                    }
+                                    // 업로드 성공 시 팝업 닫기
+                                    if (loading) loading.remove();
+                                    const popup = document.getElementById('site-ai-popup');
+                                    if (popup) popup.remove();
+                                } else {
+                                    // 실패 안내를 챗봇 메시지로 출력
+                                    const chatLayer = document.querySelector('.chat-layer[data-chat-type="site-ai"]');
+                                    if (chatLayer) {
+                                        const messagesContainer = chatLayer.querySelector('.chat-messages');
+                                        const config = window.chatbotApp.getChatConfig('site-ai');
+                                        const msg = document.createElement('div');
+                                        msg.className = 'message bot';
+                                        msg.innerHTML = `
+                                            <div class=\"modern-bot-icon site-ai-theme\">
+                                                <i class=\"mdi mdi-robot\" style=\"color: white; font-size: 20px;\"></i>
+                                            </div>
+                                            <div class=\"modern-bot-content site-ai-theme\">
+                                                <div class=\"modern-bot-text\">
+                                                    ${resultText || '업로드 결과를 확인할 수 없습니다.'}
+                                                </div>
+                                            </div>
+                                        `;
+                                        messagesContainer.appendChild(msg);
+                                        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                                    }
+                                    // 로딩바 제거, 팝업 닫기
+                                    if (loading) loading.remove();
+                                    const popup = document.getElementById('site-ai-popup');
+                                    if (popup) popup.remove();
+                                }
+                            })
+                            .catch(() => {
+                                // 에러 안내를 챗봇 메시지로 출력
+                                const chatLayer = document.querySelector('.chat-layer[data-chat-type="site-ai"]');
+                                if (chatLayer) {
+                                    const messagesContainer = chatLayer.querySelector('.chat-messages');
+                                    const config = window.chatbotApp.getChatConfig('site-ai');
+                                    const msg = document.createElement('div');
+                                    msg.className = 'message bot';
+                                    msg.innerHTML = `
+                                        <div class=\"modern-bot-icon site-ai-theme\">
+                                            <i class=\"mdi mdi-robot\" style=\"color: white; font-size: 20px;\"></i>
+                                        </div>
+                                        <div class=\"modern-bot-content site-ai-theme\">
+                                            <div class=\"modern-bot-text\">
+                                                업로드 요청에 실패했습니다. 다시 시도해 주세요.
+                                            </div>
+                                        </div>
+                                    `;
+                                    messagesContainer.appendChild(msg);
+                                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                                }
+                                // 로딩바 제거, 팝업 닫기
+                                if (loading) loading.remove();
+                                const popup = document.getElementById('site-ai-popup');
+                                if (popup) popup.remove();
+                            });
+                        }
+                    };
+                    fileInput.click();
+                };
+            } else if (type === '조회') {
+                // 챗봇에 입력폼 메시지 추가
+                const chatLayer = document.querySelector('.chat-layer[data-chat-type="site-ai"]');
+                if (chatLayer) {
+                    const messagesContainer = chatLayer.querySelector('.chat-messages');
+                    const config = window.chatbotApp.getChatConfig('site-ai');
+                    // 입력폼 메시지 컨테이너
+                    const msg = document.createElement('div');
+                    msg.className = 'message bot';
+                    msg.id = 'site-ai-search-form-msg';
+                    msg.innerHTML = `
+                        <style>
+                            #site-ai-search-btn:hover { background: #388e3c !important; }
+                            #site-ai-search-close-btn:hover { background: #bdbdbd !important; color: #222 !important; }
+                        </style>
+                        <div class=\"modern-bot-icon\" style=\"background: #4caf50;\">
+                            <i class=\"mdi mdi-robot\" style=\"color: white; font-size: 20px;\"></i>
+                        </div>
+                        <div class=\"modern-bot-content\" style=\"border: 1.5px solid #4caf50; background-color: #e6f4ea;\">
+                            <div class=\"modern-bot-text\" style=\"margin-bottom:12px;\">
+                                현장개통/해지 신청시 발급받은 접수번호를 입력해주세요.
+                            </div>
+                            <div class=\"tax-form-container\">
+                                <form class=\"tax-form\" id=\"site-ai-search-form\">
+                                    <div class=\"form-group\">
+                                        <label for=\"site-ai-receipt-input\">접수번호</label>
+                                        <input type=\"text\" id=\"site-ai-receipt-input\" name=\"receiptNumber\" required>
+                                    </div>
+                                    <div class=\"form-submit\">
+                                        <div class=\"button-group\">
+                                            <button type=\"submit\" class=\"submit-btn\" style=\"background:#4caf50;color:#fff;\">조회</button>
+                                            <button type=\"button\" class=\"cancel-btn\" id=\"site-ai-search-close-btn\">닫기</button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    `;
+                    messagesContainer.appendChild(msg);
+                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                    // 조회/닫기 버튼 이벤트 및 로딩바, fetch 등 기존 로직은 그대로 유지
+                    const form = msg.querySelector('#site-ai-search-form');
+                    form.onsubmit = (e) => {
+                        e.preventDefault();
+                        const receiptInput = document.getElementById('site-ai-receipt-input');
+                        const receiptNumber = receiptInput.value.trim();
+                        if (!receiptNumber) {
+                            // 입력폼 아래에 안내 메시지(챗봇 말풍선) 출력
+                            const chatLayer = document.querySelector('.chat-layer[data-chat-type="site-ai"]');
+                            if (chatLayer) {
+                                const messagesContainer = chatLayer.querySelector('.chat-messages');
+                                const msgWarn = document.createElement('div');
+                                msgWarn.className = 'message bot';
+                                msgWarn.innerHTML = `
+                                    <div class=\"modern-bot-icon\" style=\"background: #4caf50;\">
+                                        <i class=\"mdi mdi-robot\" style=\"color: white; font-size: 20px;\"></i>
+                                    </div>
+                                    <div class=\"modern-bot-content\" style=\"border: 1.5px solid #4caf50; background-color: #e6f4ea;\">
+                                        <div class=\"modern-bot-text\">접수번호를 입력해주세요.</div>
+                                    </div>
+                                `;
+                                messagesContainer.appendChild(msgWarn);
+                                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                            }
+                            receiptInput.focus();
+                            return;
+                        }
+                        // 버튼 비활성화
+                        form.querySelector('.submit-btn').disabled = true;
+                        form.querySelector('.cancel-btn').disabled = true;
+                        // 로딩바 표시
+                        let loading = document.getElementById('site-ai-search-loading');
+                        if (!loading) {
+                            loading = document.createElement('div');
+                            loading.id = 'site-ai-search-loading';
+                            loading.style.display = 'flex';
+                            loading.style.justifyContent = 'center';
+                            loading.style.alignItems = 'center';
+                            loading.style.marginTop = '18px';
+                            loading.innerHTML = `
+                              <svg width=\"36\" height=\"36\" viewBox=\"22 22 44 44\" style=\"animation: rotate 2s linear infinite;\">
+                                <circle cx=\"44\" cy=\"44\" r=\"20\" fill=\"none\" stroke=\"#4caf50\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-dasharray=\"90,150\" stroke-dashoffset=\"0\" style=\"animation: dash 1.5s ease-in-out infinite;\"></circle>
+                              </svg>
+                              <style>
+                              @keyframes rotate { 100% { transform: rotate(360deg); } }
+                              @keyframes dash {
+                                0% { stroke-dasharray: 1,150; stroke-dashoffset: 0; }
+                                50% { stroke-dasharray: 90,150; stroke-dashoffset: -35; }
+                                100% { stroke-dasharray: 90,150; stroke-dashoffset: -124; }
+                              }
+                              </style>
+                            `;
+                            msg.querySelector('.modern-bot-content').appendChild(loading);
+                        }
+                        // 조회 요청
+                        fetch('https://ai-chatbot.myconst.com/webhook/chatbot/project', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ actionNo: 3, receiptNumber })
+                        })
+                        .then(res => res.ok ? res.text() : Promise.reject(res))
+                        .then(responseText => {
+                            // 입력폼 메시지 제거
+                            msg.remove();
+                            // 응답 메시지 챗봇에 출력
+                            const resultMsg = document.createElement('div');
+                            resultMsg.className = 'message bot';
+                            resultMsg.innerHTML = `
+                                <div class=\"modern-bot-icon\" style=\"background: #4caf50 !important;\">
+                                    <i class=\"mdi mdi-robot\" style=\"color: white; font-size: 20px;\"></i>
+                                </div>
+                                <div class=\"modern-bot-content\" style=\"border: 1.5px solid #4caf50 !important; background: #e6f4ea !important;\">
+                                    <div class=\"modern-bot-text\">
+                                        ${responseText}
+                                    </div>
+                                </div>
+                            `;
+                            messagesContainer.appendChild(resultMsg);
+                            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                        })
+                        .catch(() => {
+                            // 입력폼 메시지 제거
+                            msg.remove();
+                            // 에러 메시지 챗봇에 출력
+                            const resultMsg = document.createElement('div');
+                            resultMsg.className = 'message bot';
+                            resultMsg.innerHTML = `
+                                <div class=\"modern-bot-icon\" style=\"background: #4caf50 !important;\">
+                                    <i class=\"mdi mdi-robot\" style=\"color: white; font-size: 20px;\"></i>
+                                </div>
+                                <div class=\"modern-bot-content\" style=\"border: 1.5px solid #4caf50 !important; background: #e6f4ea !important;\">
+                                    <div class=\"modern-bot-text\">
+                                        조회 요청에 실패했습니다. 다시 시도해 주세요.
+                                    </div>
+                                </div>
+                            `;
+                            messagesContainer.appendChild(resultMsg);
+                            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                        });
+                    };
+                    // 닫기 버튼 이벤트
+                    document.getElementById('site-ai-search-close-btn').onclick = () => {
+                        msg.remove();
+                    };
+                }
+            }
+            // ...기타 버튼 처리...
         }
     }
 
