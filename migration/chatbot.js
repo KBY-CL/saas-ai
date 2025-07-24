@@ -70,6 +70,9 @@
                 this.micPermissionGranted = true;
             }
             
+            // Google Fonts 로드
+            this.loadGoogleFonts();
+            
             // CSS 스타일 동적 생성
             this.createStyles();
             
@@ -87,6 +90,44 @@
             
             // 이벤트 리스너 설정 (아이콘 로드와 무관)
             this.setupEventListeners();
+        }
+
+        /**
+         * <pre>
+         * [Google Fonts 동적 로드]
+         * </pre>
+         */
+        loadGoogleFonts() {
+            // 이미 로드된 경우 중복 로드 방지
+            if (document.querySelector('link[href*="fonts.googleapis.com"]')) {
+                return;
+            }
+
+            const link = document.createElement('link');
+            link.rel = 'preconnect';
+            link.href = 'https://fonts.googleapis.com';
+            document.head.appendChild(link);
+
+            const link2 = document.createElement('link');
+            link2.rel = 'preconnect';
+            link2.href = 'https://fonts.gstatic.com';
+            link2.crossOrigin = 'anonymous';
+            document.head.appendChild(link2);
+
+            const fontLink = document.createElement('link');
+            fontLink.rel = 'stylesheet';
+            fontLink.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap';
+            fontLink.crossOrigin = 'anonymous';
+            
+            fontLink.onload = () => {
+                console.log('Google Fonts 로드 완료');
+            };
+            
+            fontLink.onerror = () => {
+                console.error('Google Fonts 로드 실패');
+            };
+            
+            document.head.appendChild(fontLink);
         }
 
         /**
@@ -146,11 +187,14 @@
                 }
 
                 body {
-                    font-family: 'Malgun Gothic', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                    font-family: 'Inter', 'SF Pro Display', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
                     line-height: 1.6;
                     color: #212121;
                     background-color: #f5f5f5;
                     overflow-x: hidden;
+                    -webkit-font-smoothing: antialiased;
+                    -moz-osx-font-smoothing: grayscale;
+                    font-feature-settings: 'liga' 1, 'kern' 1;
                 }
 
                 /* 메인 컨테이너 */
@@ -177,9 +221,10 @@
 
                 .welcome-title {
                     font-size: 28px;
-                    font-weight: 600;
+                    font-weight: 700;
                     color: #212121;
                     margin-bottom: 24px;
+                    letter-spacing: -0.02em;
                 }
 
                 .welcome-text {
@@ -191,8 +236,8 @@
                 /* 플로팅 메뉴 */
                 .floating-menu.pill-menu {
                     position: fixed;
-                    right: 32px;
-                    bottom: 32px;
+                    right: 48px;
+                    bottom: 48px;
                     top: auto;
                     transform: none;
                     z-index: 1000;
@@ -254,8 +299,8 @@
                     flex: 1;
                     text-align: left;
                     font-size: 1.08rem;
-                    font-weight: 600;
-                    letter-spacing: 0.01em;
+                    font-weight: 500;
+                    letter-spacing: -0.01em;
                 }
 
                 .pill-menu-icon {
@@ -293,10 +338,10 @@
                 }
 
                 /* 로봇 아이콘 버튼 */
-                .floating-robot-btn {
+                body .floating-robot-btn {
                     position: fixed;
-                    right: 32px;
-                    bottom: 32px;
+                    right: 48px;
+                    bottom: 48px;
                     top: auto;
                     transform: none;
                     z-index: 1000;
@@ -306,24 +351,69 @@
                     width: 48px;
                     height: 48px;
                     border-radius: 50%;
-                    background: #fff;
-                    color: #222;
+                    background: #c53030;
+                    color: #fff;
                     padding: 0;
-                    border: 2px solid #222;
+                    border: 2px solid #c53030;
                     box-shadow: none;
                     transition: background 0.18s, color 0.18s, border 0.18s;
                     cursor: pointer;
                 }
 
-                .floating-robot-btn:hover, .floating-robot-btn:focus {
-                    background: #f5f5f5;
-                    color: #111;
-                    border: 2px solid #111;
+                body .floating-robot-btn:hover, 
+                body .floating-robot-btn:focus {
+                    background: #dc2626;
+                    color: #fff;
+                    border: 2px solid #dc2626;
                 }
 
-                .floating-robot-btn .mdi {
-                    color: #222;
+                body .floating-robot-btn .mdi {
+                    color: #fff;
                     font-size: 2rem;
+                }
+
+                /* 더 구체적인 선택자로 덮어쓰기 */
+                body .floating-robot-btn[style] {
+                    background: #c53030 !important;
+                    color: #fff !important;
+                    border: 2px solid #c53030 !important;
+                }
+
+                body .floating-robot-btn[style]:hover,
+                body .floating-robot-btn[style]:focus {
+                    background: #dc2626 !important;
+                    color: #fff !important;
+                    border: 2px solid #dc2626 !important;
+                }
+
+                body .floating-robot-btn[style] .mdi {
+                    color: #fff !important;
+                }
+
+                /* 숨김 클래스 */
+                .floating-robot-btn.hidden {
+                    display: none !important;
+                }
+
+                /* 최소화된 상태의 로봇 버튼 */
+                .floating-robot-btn-minimized {
+                    display: flex !important;
+                    background: #c53030 !important;
+                    border: 2px solid #c53030 !important;
+                    color: #fff !important;
+                    box-shadow: 0 2px 8px rgba(197,48,48,0.10) !important;
+                    width: 56px !important;
+                    height: 56px !important;
+                    border-radius: 50% !important;
+                    align-items: center !important;
+                    justify-content: center !important;
+                    right: 48px !important;
+                    bottom: 48px !important;
+                    position: fixed !important;
+                }
+
+                .floating-robot-btn-minimized .mdi {
+                    color: #fff !important;
                 }
 
                 @media (max-width: 768px) {
@@ -544,13 +634,15 @@
 
                 .modern-bot-text {
                     color: #000;
-                    font-size: 1rem;
-                    line-height: 1.6;
+                    font-size: 15px;
+                    line-height: 1.7;
                     text-align: left;
                     white-space: pre-line;
                     margin-bottom: 8px;
                     word-break: break-word;
                     overflow-wrap: break-word;
+                    font-weight: 400;
+                    letter-spacing: -0.01em;
                 }
 
                 .modern-bot-divider {
@@ -658,13 +750,15 @@
 
                 .modern-user-text {
                     color: #fff;
-                    font-size: 1rem;
-                    line-height: 1.6;
+                    font-size: 15px;
+                    line-height: 1.7;
                     text-align: left;
                     white-space: pre-line;
                     margin-bottom: 8px;
                     word-break: break-word;
                     overflow-wrap: break-word;
+                    font-weight: 400;
+                    letter-spacing: -0.01em;
                 }
 
                 .modern-user-divider {
@@ -710,14 +804,16 @@
                     border: 1px solid #e0e0e0;
                     border-radius: 24px;
                     padding: 16px 16px;
-                    font-size: 14px;
+                    font-size: 15px;
                     resize: none;
                     outline: none;
                     font-family: inherit;
-                    line-height: 1.4;
+                    line-height: 1.5;
                     min-height: 44px;
                     max-height: 120px;
                     overflow-y: auto;
+                    font-weight: 400;
+                    letter-spacing: -0.01em;
                 }
 
                 .chat-input:focus {
@@ -1151,15 +1247,16 @@
                     display: flex;
                     align-items: center;
                     justify-content: space-between;
-                    margin-bottom: 2px;
+                    margin-bottom: 1px;
                 }
                 .chat-title {
                     font-size: 16px;
                     font-weight: 600;
-                    color: #222;
+                    color: #000;
                     white-space: nowrap;
                     overflow: hidden;
                     text-overflow: ellipsis;
+                    letter-spacing: -0.01em;
                 }
                 .chat-time {
                     font-size: 13px;
@@ -1168,7 +1265,7 @@
                     flex-shrink: 0;
                 }
                 .chat-preview {
-                    font-size: 14px;
+                    font-size: 13px;
                     color: #555;
                     opacity: 0.85;
                     white-space: nowrap;
@@ -1366,8 +1463,7 @@
             if (!document.getElementById('floating-robot-btn')) {
                 const robotBtn = document.createElement('button');
                 robotBtn.id = 'floating-robot-btn';
-                robotBtn.className = 'floating-robot-btn';
-                robotBtn.style.display = 'none';
+                robotBtn.className = 'floating-robot-btn hidden';
                 robotBtn.innerHTML = '<i class="mdi mdi-menu"></i>';
                 document.body.appendChild(robotBtn);
             }
@@ -1398,7 +1494,7 @@
 
             if (this.bShowFloatingMenu && this.openChatRoomId === null) {
                 menuContainer.style.display = 'flex';
-                robotBtn.style.display = 'none';
+                robotBtn.classList.add('hidden');
 
                 // 샘플 미리보기/시간/뱃지 데이터
                 const chatList = [
@@ -1426,13 +1522,13 @@
                 };
 
                 menuContainer.innerHTML = `
-                  <div class="floating-menu-root" style="width:420px; min-width:420px; max-width:420px;">
+                  <div class="floating-menu-root">
                     <div class="floating-menu-sidebar">
-                      <div class="sidebar-logo" style="margin-bottom:16px; display:flex; align-items:center; justify-content:center;">
-                        <img src="symbol-kosha.png" alt="logo" style="width:36px; height:36px; border-radius:8px;" />
+                      <div class="sidebar-logo">
+                        <img src="symbol-kosha.png" alt="logo" />
                       </div>
-                      <div class="sidebar-chat" style="margin: 8px 0; cursor:pointer; width:44px; height:44px; display:flex; align-items:center; justify-content:center; background: #ececec; border-radius: 4px;">
-                        <img src="chat.png" alt="chat" style="width: 28px; height: 28px;">
+                      <div class="sidebar-chat">
+                        <img src="chat_icon.png" alt="chat" />
                       </div>
                     </div>
                     <div class="floating-menu-main">
@@ -1440,20 +1536,20 @@
                         <span class="header-title">채팅</span>
                         <div class="header-icons">
                           <button class="header-minimize-btn" onclick="window.chatbotApp.handleMinimize()" aria-label="최소화">
-                            <i class="mdi mdi-minus" style="font-size: 22px; color: #333;"></i>
+                            <i class="mdi mdi-minus icon-minus"></i>
                           </button>
-                          <i class="mdi mdi-window-close" style="font-size: 22px; color: #333; cursor:pointer;" onclick="window.chatbotApp.handleRootClose()"></i>
+                          <i class="mdi mdi-window-close icon-close" onclick="window.chatbotApp.handleRootClose()"></i>
                         </div>
                       </div>
-                      <div style="width:100%;height:100%;display:flex;flex-direction:column;">
-                        <div class="chat-list" style="display:${this.bShowChatList ? 'flex' : 'none'};flex-direction:column;">
+                      <div class="chat-container">
+                        <div class="chat-list ${this.bShowChatList ? '' : 'hidden'}">
                           ${chatList.map(item => {
                             const config = this.getChatConfig(item.theme);
                             if (item.isExternal) {
                               return `
                                 <div class="chat-card" data-theme="${item.theme}" onclick="window.open('${item.link}', '_blank')">
-                                  <div class="chat-avatar" style="background:${config.headerColor};">
-                                    <i class="mdi ${item.icon}" style="font-size: 22px; color: #fff;"></i>
+                                  <div class="chat-avatar" data-theme="${item.theme}">
+                                    <i class="mdi ${item.icon} chat-avatar-icon"></i>
                                   </div>
                                   <div class="chat-info">
                                     <div class="chat-title-row">
@@ -1467,8 +1563,8 @@
                               const isMinimized = this.chatLayers[item.id] && this.chatLayers[item.id].isMinimized;
                               return `
                                 <div class="chat-card" onclick="window.chatbotApp.enterChatRoom('${item.id}')">
-                                  <div class="chat-avatar" style="background:${config.headerColor};">
-                                    <i class="mdi ${item.icon}" style="font-size: 22px; color: #fff;"></i>
+                                  <div class="chat-avatar" data-theme="${item.theme}">
+                                    <i class="mdi ${item.icon} chat-avatar-icon"></i>
                                   </div>
                                   <div class="chat-info">
                                     <div class="chat-title-row">
@@ -1477,13 +1573,13 @@
                                     </div>
                                     <div class="chat-preview">${item.preview}</div>
                                   </div>
-                                  ${isMinimized ? `<div class="chat-badge" style="background:#1976d2;">대화중</div>` : ''}
+                                  ${isMinimized ? `<div class="chat-badge">대화중</div>` : ''}
                                 </div>
                               `;
                             }
                           }).join('')}
                         </div>
-                        <div class="chatbot-info-center" style="display:${this.bShowChatList ? 'none' : 'flex'};align-items:center;justify-content:center;height:100%;min-height:320px;">
+                        <div class="chatbot-info-center ${this.bShowChatList ? 'hidden' : ''}">
                           <div class="chatbot-info-title">스마트위험성평가 Chatbot 서비스 v2.0</div>
                         </div>
                       </div>
@@ -1509,20 +1605,9 @@
             } else {
                 menuContainer.style.display = 'none';
                 // 플로팅 메뉴가 최소화되면 + 버튼(동그라미 안에 +)을 보이게
-                robotBtn.innerHTML = '<i class="mdi mdi-plus" style="font-size: 28px;"></i>';
-                robotBtn.style.display = 'flex';
-                robotBtn.style.background = '#fff';
-                robotBtn.style.border = '2px solid #1976d2';
-                robotBtn.style.color = '#1976d2';
-                robotBtn.style.boxShadow = '0 2px 8px rgba(25,118,210,0.10)';
-                robotBtn.style.width = '56px';
-                robotBtn.style.height = '56px';
-                robotBtn.style.borderRadius = '50%';
-                robotBtn.style.alignItems = 'center';
-                robotBtn.style.justifyContent = 'center';
-                robotBtn.style.right = '32px';
-                robotBtn.style.bottom = '32px';
-                robotBtn.style.position = 'fixed';
+                robotBtn.innerHTML = '<i class="mdi mdi-plus icon-plus"></i>';
+                robotBtn.classList.remove('hidden');
+                robotBtn.classList.add('floating-robot-btn-minimized');
             }
         }
 
@@ -1601,18 +1686,18 @@
                         messagesHTML += `
                         <div class="message user">
                             <div class="modern-user-card">
-                                <div class="modern-user-content" style="background: ${config.userMessageColor}; border: 1.5px solid ${config.userMessageColor};">
+                                <div class="modern-user-content" data-theme="${type}">
                                     <div class="modern-user-text">${msg.text}</div>
                                     <div class="modern-user-divider"></div>
                                     <div class="modern-user-bottom">
                                         <span class="modern-user-time">${msg.time}</span>
                                         <button class="modern-copy-btn bottom-right" onclick="window.chatbotApp.copyToClipboard('${msg.text.replace(/'/g, "\\'")}')" aria-label="메시지 복사">
-                                            <i class="mdi mdi-content-copy" style="font-size: 16px; color: white;"></i>
+                                            <i class="mdi mdi-content-copy copy-icon"></i>
                                         </button>
                                     </div>
                                 </div>
-                                <div class="modern-user-icon" style="background: ${config.userMessageColor};">
-                                    <i class="mdi mdi-account" style="color: white; font-size: 20px;"></i>
+                                <div class="modern-user-icon" data-theme="${type}">
+                                    <i class="mdi mdi-account user-icon"></i>
                                 </div>
                             </div>
                         </div>
@@ -1624,19 +1709,19 @@
                         
                         messagesHTML += `
                         <div class="message bot" data-message-id="${messageId}">
-                            <div class="modern-bot-icon" style="background: ${config.botMessageColor};">
-                                <i class="mdi mdi-robot" style="color: white; font-size: 20px;"></i>
+                            <div class="modern-bot-icon" data-theme="${type}">
+                                <i class="mdi mdi-robot bot-icon"></i>
                             </div>
-                            <div class="modern-bot-content" style="border: 1.5px solid ${config.botMessageColor}; background-color: ${this.getBotBackgroundColor(type, config.botMessageColor)};">
+                            <div class="modern-bot-content" data-theme="${type}">
                                 <div class="modern-bot-text">${msg.text}</div>
-                                <div class="modern-bot-divider" style="background: ${config.botMessageColor};"></div>
+                                <div class="modern-bot-divider" data-theme="${type}"></div>
                                 <div class="modern-bot-bottom">
                                     <div class="modern-bot-bottom-row">
                                         <span class="modern-bot-time">${msg.time}</span>
-                                        <div style="display: flex; align-items: center;">
+                                        <div class="flex-center">
                                             ${ratingHTML}
                                             <button class="modern-copy-btn bottom-right" onclick="window.chatbotApp.copyToClipboard('${msg.text.replace(/'/g, "\\'")}')" aria-label="메시지 복사">
-                                                <i class="mdi mdi-content-copy" style="font-size: 16px; color: ${config.botMessageColor};"></i>
+                                                <i class="mdi mdi-content-copy copy-icon-theme" data-theme="${type}"></i>
                                             </button>
                                         </div>
                                     </div>
@@ -1656,10 +1741,10 @@
                 if (type === 'site-ai') {
                     messagesHTML = `
                         <div class="message bot">
-                            <div class="modern-bot-icon" style="background: #4caf50;">
-                                <i class="mdi mdi-robot" style="color: white; font-size: 20px;"></i>
+                            <div class="modern-bot-icon" data-theme="site-ai">
+                                <i class="mdi mdi-robot bot-icon"></i>
                             </div>
-                            <div class="modern-bot-content" style="border: 1.5px solid #4caf50; background-color: #e6f4ea;">
+                            <div class="modern-bot-content" data-theme="site-ai">
                                 <div class="modern-bot-text">${welcomeText}</div>
                             </div>
                         </div>
@@ -1667,10 +1752,10 @@
                 } else {
                     messagesHTML = `
                         <div class="message bot">
-                            <div class="modern-bot-icon" style="background: ${config.botMessageColor};">
-                                <i class="mdi mdi-robot" style="color: white; font-size: 20px;"></i>
+                            <div class="modern-bot-icon" data-theme="${type}">
+                                <i class="mdi mdi-robot bot-icon"></i>
                             </div>
-                            <div class="modern-bot-content" style="border: 1.5px solid ${config.botMessageColor}; background-color: ${this.getBotBackgroundColor(type, config.botMessageColor)};">
+                            <div class="modern-bot-content" data-theme="${type}">
                                 <div class="modern-bot-text">${welcomeText}</div>
                                 ${type === 'tax-ai' ? this.createTaxButtonsHTML() : ''}
                             </div>
@@ -1680,28 +1765,28 @@
             }
 
             chatLayer.innerHTML = `
-                <div class="chat-header" style="background: ${config.headerColor};">
+                <div class="chat-header" data-theme="${type}">
                     <div class="chat-header-info">
-                        <div class="chat-avatar" style="background: ${config.headerColor};">
-                            <i class="mdi mdi-robot" style="color: white; font-size: 20px;"></i>
+                        <div class="chat-avatar" data-theme="${type}">
+                            <i class="mdi mdi-robot bot-icon"></i>
                         </div>
                         <div>
-                            <h3 class="chat-title" style="color: white; margin: 0; font-size: 20px; font-weight: 600;">${config.title}</h3>
-                            <p class="chat-status" style="color: rgba(255,255,255,0.8); margin: 0; font-size: 14px;">온라인 상담 중</p>
+                            <h3 class="chat-title">${config.title}</h3>
+                            <p class="chat-status">온라인 상담 중</p>
                         </div>
                     </div>
                     <div class="chat-header-controls">
                         <button class="chat-header-btn" onclick="window.chatbotApp.minimizeChatLayer('${type}')" aria-label="최소화">
-                            <i class="mdi mdi-minus" style="color: white; font-size: 18px;"></i>
+                            <i class="mdi mdi-minus header-icon"></i>
                         </button>
                         <button class="chat-header-btn" onclick="window.chatbotApp.resizeChatLayer('${type}', 'mid')" aria-label="중간 크기">
-                            <i class="mdi mdi-arrow-expand-horizontal" style="color: white; font-size: 18px;"></i>
+                            <i class="mdi mdi-arrow-expand-horizontal header-icon"></i>
                         </button>
                         <button class="chat-header-btn" onclick="window.chatbotApp.resizeChatLayer('${type}', 'max')" aria-label="최대화">
-                            <i class="mdi mdi-arrow-expand-all" style="color: white; font-size: 18px;"></i>
+                            <i class="mdi mdi-arrow-expand-all header-icon"></i>
                         </button>
                         <button class="chat-close-btn" onclick="window.chatbotApp.closeChatLayer('${type}')" aria-label="닫기">
-                            <i class="mdi mdi-close" style="color: white; font-size: 18px;"></i>
+                            <i class="mdi mdi-close header-icon"></i>
                         </button>
                     </div>
                 </div>
@@ -1710,20 +1795,19 @@
                 </div>
                 <div class="modern-bottom-divider"></div>
                 ${(type === 'tax-ai' || type === 'site-ai') ? `
-                <div class="chat-input-area" style="opacity: 0.5; pointer-events: none;">
+                <div class="chat-input-area disabled">
                     <textarea class="chat-input" placeholder="입력이 비활성화되었습니다" rows="1" disabled></textarea>
                     <div class="transparency-control">
                         <input type="range" min="90" max="100" value="${this.transparency[type]}" 
                                class="transparency-slider" 
                                onchange="window.chatbotApp.updateTransparency('${type}', this.value)"
-                               oninput="window.chatbotApp.updateTransparency('${type}', this.value)"
-                               style="width: 80px; ${sliderStyle}">
+                               oninput="window.chatbotApp.updateTransparency('${type}', this.value)">
                     </div>
                     <button class="chat-mic-btn" disabled aria-label="음성 입력">
-                        <i class="mdi mdi-microphone-outline" style="font-size: 26px; color: #ccc;"></i>
+                        <i class="mdi mdi-microphone-outline mic-icon disabled"></i>
                     </button>
                     <button class="chat-send-btn" disabled aria-label="전송">
-                        <i class="mdi mdi-send" style="font-size: 20px; color: #ccc;"></i>
+                        <i class="mdi mdi-send send-icon disabled"></i>
                     </button>
                 </div>
                 ` : `
@@ -1733,14 +1817,13 @@
                         <input type="range" min="90" max="100" value="${this.transparency[type]}" 
                                class="transparency-slider" 
                                onchange="window.chatbotApp.updateTransparency('${type}', this.value)"
-                               oninput="window.chatbotApp.updateTransparency('${type}', this.value)"
-                               style="width: 80px; ${sliderStyle}">
+                               oninput="window.chatbotApp.updateTransparency('${type}', this.value)">
                     </div>
                     <button class="chat-mic-btn" onclick="window.chatbotApp.toggleMic('${type}')" aria-label="음성 입력">
-                        <i class="mdi mdi-microphone-outline" style="font-size: 26px; color: ${config.headerColor};"></i>
+                        <i class="mdi mdi-microphone-outline mic-icon"></i>
                     </button>
                     <button class="chat-send-btn" onclick="window.chatbotApp.sendMessage('${type}')" aria-label="전송">
-                        <i class="mdi mdi-send" style="font-size: 20px; color: ${config.headerColor};"></i>
+                        <i class="mdi mdi-send send-icon"></i>
                     </button>
                 </div>
                 `}
@@ -1751,6 +1834,9 @@
             
             // 초기 투명도 적용
             this.updateTransparency(type, this.transparency[type]);
+            
+            // 슬라이더 색상 설정
+            this.updateSliderColor(type);
             
             // 저장된 별점 로드 (위험성평가와 건설안전에만)
             if (type === 'construction-safety' || type === 'risk-assessment') {
@@ -1881,18 +1967,18 @@
             userMessage.className = 'message user';
             userMessage.innerHTML = `
                 <div class="modern-user-card">
-                    <div class="modern-user-content" style="background: ${config.userMessageColor}; border: 1.5px solid ${config.userMessageColor};">
+                    <div class="modern-user-content" data-theme="${type}">
                         <div class="modern-user-text">${message}</div>
                         <div class="modern-user-divider"></div>
                         <div class="modern-user-bottom">
                             <span class="modern-user-time">${this.getCurrentTime()}</span>
                             <button class="modern-copy-btn bottom-right" onclick="window.chatbotApp.copyToClipboard('${message.replace(/'/g, "\\'")}')" aria-label="메시지 복사">
-                                <i class="mdi mdi-content-copy" style="font-size: 16px; color: white;"></i>
+                                <i class="mdi mdi-content-copy copy-icon"></i>
                             </button>
                         </div>
                     </div>
-                    <div class="modern-user-icon" style="background: ${config.userMessageColor};">
-                        <i class="mdi mdi-account" style="color: white; font-size: 20px;"></i>
+                    <div class="modern-user-icon" data-theme="${type}">
+                        <i class="mdi mdi-account user-icon"></i>
                     </div>
                 </div>
             `;
@@ -1950,22 +2036,25 @@
             botMessage.className = 'message bot';
             botMessage.setAttribute('data-message-id', messageId);
             botMessage.innerHTML = `
-                <div class="modern-bot-icon" style="background: ${config.botMessageColor};">
-                    <i class="mdi mdi-robot" style="color: white; font-size: 20px;"></i>
+                <div class="modern-bot-icon" data-theme="${type}">
+                    <i class="mdi mdi-robot bot-icon"></i>
                 </div>
-                <div class="modern-bot-content" style="border: 1.5px solid ${config.botMessageColor}; background-color: ${config.botMessageColor === '#dc3545' ? '#fff0f0' : config.botMessageColor === '#1976d2' ? '#e3f2fd' : config.botMessageColor === '#4caf50' ? '#f1f8e9' : config.botMessageColor === '#fee500' ? '#fff9c4' : '#fff0f0'};">
+                <div class="modern-bot-content" data-theme="${type}">
                     <div class="modern-bot-text">${response}</div>
                     ${type === 'tax-ai' ? this.createTaxButtonsHTML() : ''}
                     ${type !== 'tax-ai' ? `
-                        <div class="modern-bot-divider" style="background: ${config.botMessageColor};"></div>
+                        <div class="modern-bot-divider" data-theme="${type}"></div>
                         <div class="modern-bot-bottom">
-                            <span class="modern-bot-time">${this.getCurrentTime()}</span>
-                            <div style="display: flex; align-items: center;">
-                                ${ratingHTML}
-                                <button class="modern-copy-btn bottom-right" onclick="window.chatbotApp.copyToClipboard('${response.replace(/'/g, "\\'")}')" aria-label="메시지 복사">
-                                    <i class="mdi mdi-content-copy" style="font-size: 16px; color: ${config.botMessageColor};"></i>
-                                </button>
+                            <div class="modern-bot-bottom-row">
+                                <span class="modern-bot-time">${this.getCurrentTime()}</span>
+                                <div class="flex-center">
+                                    ${ratingHTML}
+                                    <button class="modern-copy-btn bottom-right" onclick="window.chatbotApp.copyToClipboard('${response.replace(/'/g, "\\'")}')" aria-label="메시지 복사">
+                                        <i class="mdi mdi-content-copy copy-icon-theme" data-theme="${type}"></i>
+                                    </button>
+                                </div>
                             </div>
+                            ${this.getFeedbackTextHTML(type)}
                         </div>
                     ` : ''}
                 </div>
@@ -2162,9 +2251,9 @@
 
             minimizedChatbot.innerHTML = `
                 <div class="minimized-content">
-                    <i class="mdi mdi-robot" style="color: white; font-size: 24px;"></i>
+                    <i class="mdi mdi-robot minimized-icon"></i>
                     <span class="minimized-text">${minimizedTitle}</span>
-                    <i class="mdi mdi-chevron-up restore-btn" style="color: white; font-size: 20px; cursor:pointer;"></i>
+                    <i class="mdi mdi-chevron-up restore-btn"></i>
                     <button class="minimized-close-btn" title="닫기" tabindex="0" aria-label="닫기">
                         <i class="mdi mdi-close"></i>
                     </button>
@@ -2353,8 +2442,32 @@
                 // 원본과 동일한 계산 방식: 90% = 0.1 (거의 투명), 100% = 1.0 (완전 불투명)
                 const opacity = (this.transparency[type] - 90) / 10;
                 chatLayer.style.opacity = Math.max(0.1, Math.min(1.0, opacity)); // 0.1 ~ 1.0 범위로 제한
+                
+                // 투명도 슬라이더 색상을 테마에 맞게 변경
+                this.updateSliderColor(type);
             }
             this.saveState();
+        }
+
+        /**
+         * <pre>
+         * [투명도 슬라이더 색상 업데이트]
+         * </pre>
+         * 
+         * @param {string} type 채팅 타입
+         */
+        updateSliderColor(type) {
+            const chatLayer = document.querySelector(`[data-chat-type="${type}"]`);
+            if (!chatLayer) return;
+            
+            const slider = chatLayer.querySelector('.transparency-slider');
+            if (!slider) return;
+            
+            const config = this.getChatConfig(type);
+            const themeColor = config.headerColor;
+            
+            // CSS 변수로 슬라이더 색상 설정
+            slider.style.setProperty('--slider-thumb-color', themeColor);
         }
 
         // 음성 인식 관련 상태
@@ -2443,7 +2556,7 @@
 
                 recognition.onstart = () => {
                     this.isListeningMap[type] = true;
-                    micBtn.innerHTML = `<i class="mdi mdi-microphone" style="font-size: 26px; color: #f44336;"></i>`;
+                    micBtn.innerHTML = `<i class="mdi mdi-microphone mic-icon active"></i>`;
                     this.showNotification('음성 인식이 시작되었습니다. 말씀해 주세요.');
                     console.log('음성 인식 시작');
                 };
@@ -2470,13 +2583,13 @@
                     console.error('음성 인식 오류:', event.error);
                     this.showNotification('음성 인식 오류: ' + event.error);
                     this.isListeningMap[type] = false;
-                    micBtn.innerHTML = `<i class="mdi mdi-microphone-outline" style="font-size: 26px; color: ${config.headerColor};"></i>`;
+                    micBtn.innerHTML = `<i class="mdi mdi-microphone-outline mic-icon"></i>`;
                 };
 
                 recognition.onend = () => {
                     console.log('음성 인식 종료');
                     this.isListeningMap[type] = false;
-                    micBtn.innerHTML = `<i class="mdi mdi-microphone-outline" style="font-size: 26px; color: ${config.headerColor};"></i>`;
+                    micBtn.innerHTML = `<i class="mdi mdi-microphone-outline mic-icon"></i>`;
                     this.showNotification('음성 인식이 종료되었습니다.');
                 };
 
@@ -2497,7 +2610,7 @@
                     }
                 }
                 this.isListeningMap[type] = false;
-                micBtn.innerHTML = `<i class="mdi mdi-microphone-outline" style="font-size: 26px; color: ${config.headerColor};"></i>`;
+                micBtn.innerHTML = `<i class="mdi mdi-microphone-outline mic-icon"></i>`;
                 this.showNotification('음성 인식이 중지되었습니다.');
             }
         }
@@ -2735,12 +2848,12 @@
             confirmDiv.style.background = 'rgba(0,0,0,0.25)';
             confirmDiv.style.zIndex = '99999';
             confirmDiv.innerHTML = `
-                <div style="background:#fff;padding:32px 28px 24px 28px;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.18);min-width:320px;max-width:90vw;text-align:center;">
-                  <div style="font-size:18px;font-weight:600;margin-bottom:18px;">대화내용이 모두 초기화 됩니다</div>
-                  <div style="display:flex;justify-content:center;gap:18px;margin-top:12px;">
-                    <button id="chatbot-confirm-ok" style="background:#1976d2;color:#fff;font-weight:600;padding:8px 24px;border:none;border-radius:6px;font-size:15px;cursor:pointer;">확인</button>
-                    <button id="chatbot-confirm-cancel" style="background:#ececec;color:#333;font-weight:600;padding:8px 24px;border:none;border-radius:6px;font-size:15px;cursor:pointer;">취소</button>
-                  </div>
+                                <div class="popup-container">
+                    <div class="popup-title">대화내용이 모두 초기화 됩니다</div>
+                    <div class="popup-buttons">
+                        <button id="chatbot-confirm-ok" class="btn-primary">확인</button>
+                        <button id="chatbot-confirm-cancel" class="btn-secondary">취소</button>
+                    </div>
                 </div>
             `;
             document.body.appendChild(confirmDiv);
@@ -2955,6 +3068,448 @@
                     text-align: right;
                     margin-top: 4px;
                     padding-right: 8px;
+                }
+
+                /* 플로팅 메뉴 스타일 */
+                .floating-menu-root {
+                    width: 420px;
+                    min-width: 420px;
+                    max-width: 420px;
+                }
+
+                .sidebar-logo {
+                    margin-bottom: 16px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+
+                .sidebar-logo img {
+                    width: 36px;
+                    height: 36px;
+                    border-radius: 8px;
+                }
+
+                .sidebar-chat {
+                    margin: 8px 0;
+                    cursor: pointer;
+                    width: 44px;
+                    height: 44px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    background: #ececec;
+                    border-radius: 4px;
+                }
+
+                .sidebar-chat img {
+                    width: 28px;
+                    height: 28px;
+                }
+
+                .icon-minus {
+                    font-size: 22px;
+                    color: #333;
+                }
+
+                .icon-close {
+                    font-size: 18px;
+                    color: #333;
+                    cursor: pointer;
+                }
+
+                .chat-container {
+                    width: 100%;
+                    height: 100%;
+                    display: flex;
+                    flex-direction: column;
+                }
+
+                .chat-list {
+                    display: flex;
+                    flex-direction: column;
+                }
+
+                .chat-list.hidden {
+                    display: none;
+                }
+
+                .chat-avatar {
+                    /* 기본 스타일은 유지하고 data-theme으로 배경색 관리 */
+                }
+
+                .chat-avatar[data-theme="site-ai"] {
+                    background: #4caf50;
+                }
+
+                .chat-avatar[data-theme="construction-safety"] {
+                    background: #c53030;
+                }
+
+                .chat-avatar[data-theme="risk-assessment"] {
+                    background: #1976d2;
+                }
+
+                .chat-avatar[data-theme="tax-ai"] {
+                    background: #ff8f00;
+                }
+
+                .chat-avatar-icon {
+                    font-size: 22px;
+                    color: #fff;
+                }
+
+                .chat-badge {
+                    background: #1976d2;
+                }
+
+                .chatbot-info-center {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    height: 100%;
+                    min-height: 320px;
+                }
+
+                .chatbot-info-center.hidden {
+                    display: none;
+                }
+
+                .icon-plus {
+                    font-size: 28px;
+                }
+
+                /* 사용자 메시지 스타일 */
+                .modern-user-content {
+                    /* 기본 스타일은 유지하고 data-theme으로 배경색 관리 */
+                }
+
+                .modern-user-content[data-theme="construction-safety"] {
+                    background: #c53030;
+                    border: 1.5px solid #c53030;
+                }
+
+                .modern-user-content[data-theme="risk-assessment"] {
+                    background: #1976d2;
+                    border: 1.5px solid #1976d2;
+                }
+
+                .modern-user-content[data-theme="tax-ai"] {
+                    background: #ff8f00;
+                    border: 1.5px solid #ff8f00;
+                }
+
+                .modern-user-content[data-theme="site-ai"] {
+                    background: #4caf50;
+                    border: 1.5px solid #4caf50;
+                }
+
+                .copy-icon {
+                    font-size: 16px;
+                    color: white;
+                }
+
+                .modern-user-icon {
+                    /* 기본 스타일은 유지하고 data-theme으로 배경색 관리 */
+                }
+
+                .modern-user-icon[data-theme="construction-safety"] {
+                    background: #c53030;
+                }
+
+                .modern-user-icon[data-theme="risk-assessment"] {
+                    background: #1976d2;
+                }
+
+                .modern-user-icon[data-theme="tax-ai"] {
+                    background: #ff8f00;
+                }
+
+                .modern-user-icon[data-theme="site-ai"] {
+                    background: #4caf50;
+                }
+
+                .user-icon {
+                    color: white;
+                    font-size: 20px;
+                }
+
+                /* 봇 메시지 스타일 */
+                .modern-bot-icon {
+                    /* 기본 스타일은 유지하고 data-theme으로 배경색 관리 */
+                }
+
+                .modern-bot-icon[data-theme="site-ai"] {
+                    background: #4caf50;
+                }
+
+                .modern-bot-icon[data-theme="construction-safety"] {
+                    background: #c53030;
+                }
+
+                .modern-bot-icon[data-theme="risk-assessment"] {
+                    background: #1976d2;
+                }
+
+                .modern-bot-icon[data-theme="tax-ai"] {
+                    background: #ff8f00;
+                }
+
+                .bot-icon {
+                    color: white;
+                    font-size: 20px;
+                }
+
+                .modern-bot-content {
+                    /* 기본 스타일은 유지하고 data-theme으로 테두리와 배경색 관리 */
+                }
+
+                .modern-bot-content[data-theme="site-ai"] {
+                    border: 1.5px solid #4caf50;
+                    background-color: #e6f4ea;
+                }
+
+                .modern-bot-content[data-theme="construction-safety"] {
+                    border: 1.5px solid #c53030;
+                    background-color: #fff0f0;
+                }
+
+                .modern-bot-content[data-theme="risk-assessment"] {
+                    border: 1.5px solid #1976d2;
+                    background-color: #e3f2fd;
+                }
+
+                .modern-bot-content[data-theme="tax-ai"] {
+                    border: 1.5px solid #ff8f00;
+                    background-color: #fff3e0;
+                }
+
+                .modern-bot-divider {
+                    /* 기본 스타일은 유지하고 data-theme으로 배경색 관리 */
+                }
+
+                .modern-bot-divider[data-theme="site-ai"] {
+                    background: #4caf50;
+                }
+
+                .modern-bot-divider[data-theme="construction-safety"] {
+                    background: #c53030;
+                }
+
+                .modern-bot-divider[data-theme="risk-assessment"] {
+                    background: #1976d2;
+                }
+
+                .modern-bot-divider[data-theme="tax-ai"] {
+                    background: #ff8f00;
+                }
+
+                .flex-center {
+                    display: flex;
+                    align-items: center;
+                }
+
+                .copy-icon-theme {
+                    font-size: 16px;
+                }
+
+                .copy-icon-theme[data-theme="site-ai"] {
+                    color: #4caf50;
+                }
+
+                .copy-icon-theme[data-theme="construction-safety"] {
+                    color: #c53030;
+                }
+
+                .copy-icon-theme[data-theme="risk-assessment"] {
+                    color: #1976d2;
+                }
+
+                .copy-icon-theme[data-theme="tax-ai"] {
+                    color: #ff8f00;
+                }
+
+                /* 채팅 헤더 스타일 */
+                .chat-header {
+                    /* 기본 스타일은 유지하고 data-theme으로 배경색 관리 */
+                }
+
+                .chat-header[data-theme="site-ai"] {
+                    background: #4caf50;
+                }
+
+                .chat-header[data-theme="construction-safety"] {
+                    background: #c53030;
+                }
+
+                .chat-header[data-theme="risk-assessment"] {
+                    background: #1976d2;
+                }
+
+                .chat-header[data-theme="tax-ai"] {
+                    background: #ff8f00;
+                }
+
+                .chat-title {
+                    color: white;
+                    margin: 0;
+                    font-size: 16px;
+                    font-weight: 600;
+                    letter-spacing: -0.02em;
+                }
+
+                /* 채팅방 리스트의 chat-title은 검은색으로 */
+                .floating-menu-main .chat-title {
+                    color: #000;
+                }
+
+                .chat-status {
+                    color: rgba(255,255,255,0.8);
+                    margin: 0;
+                    font-size: 14px;
+                }
+
+                .header-icon {
+                    color: white;
+                    font-size: 18px;
+                }
+
+                /* 채팅 입력 영역 */
+                .chat-input-area.disabled {
+                    opacity: 0.5;
+                    pointer-events: none;
+                }
+
+                .transparency-slider {
+                    width: 80px;
+                }
+
+                .mic-icon {
+                    font-size: 26px;
+                }
+
+                .mic-icon.disabled {
+                    color: #ccc;
+                }
+
+                .send-icon {
+                    font-size: 20px;
+                }
+
+                .send-icon.disabled {
+                    color: #ccc;
+                }
+
+                .mic-icon.active {
+                    color: #f44336;
+                }
+
+                /* 미니마이즈된 채팅봇 */
+                .minimized-icon {
+                    color: white;
+                    font-size: 24px;
+                }
+
+                .restore-btn {
+                    color: white;
+                    font-size: 20px;
+                    cursor: pointer;
+                }
+
+                /* 팝업 스타일 */
+                .popup-container {
+                    background: #fff;
+                    padding: 32px 28px 24px 28px;
+                    border-radius: 12px;
+                    box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+                    min-width: 320px;
+                    max-width: 90vw;
+                    text-align: center;
+                }
+
+                .popup-title {
+                    font-size: 18px;
+                    font-weight: 600;
+                    margin-bottom: 18px;
+                    letter-spacing: -0.01em;
+                }
+
+                .popup-content {
+                    font-size: 15px;
+                    line-height: 1.7;
+                    margin-bottom: 18px;
+                }
+
+                .popup-buttons {
+                    display: flex;
+                    justify-content: center;
+                    gap: 18px;
+                    margin-top: 12px;
+                }
+
+                .btn-primary {
+                    background: #1976d2;
+                    color: #fff;
+                    font-weight: 500;
+                    padding: 8px 24px;
+                    border: none;
+                    border-radius: 6px;
+                    font-size: 15px;
+                    cursor: pointer;
+                    letter-spacing: -0.01em;
+                }
+
+                .btn-secondary {
+                    background: #ececec;
+                    color: #333;
+                    font-weight: 600;
+                    padding: 8px 24px;
+                    border: none;
+                    border-radius: 6px;
+                    font-size: 15px;
+                    cursor: pointer;
+                }
+
+                .btn-success {
+                    background: #4caf50;
+                    color: #fff;
+                    font-weight: 600;
+                    padding: 10px 18px;
+                    border: none;
+                    border-radius: 6px;
+                    font-size: 15px;
+                    cursor: pointer;
+                }
+
+                .btn-info {
+                    background: #1976d2;
+                    color: #fff;
+                    font-weight: 600;
+                    padding: 10px 18px;
+                    border: none;
+                    border-radius: 6px;
+                    font-size: 15px;
+                    cursor: pointer;
+                }
+
+                .text-primary {
+                    color: #1976d2;
+                    font-weight: 700;
+                }
+
+                .text-info {
+                    font-size: 13px;
+                    font-weight: 700;
+                    color: #222;
+                }
+
+                /* 로딩 스피너 */
+                .loading-spinner {
+                    animation: rotate 2s linear infinite;
+                }
+
+                .loading-circle {
+                    animation: dash 1.5s ease-in-out infinite;
                 }
 
                 /* 세금계산서 버튼 스타일 */
@@ -3233,10 +3788,10 @@
                 const formMessage = document.createElement('div');
                 formMessage.className = 'message bot';
                 formMessage.innerHTML = `
-                    <div class="modern-bot-icon" style="background: ${config.botMessageColor};">
-                        <i class="mdi mdi-robot" style="color: white; font-size: 20px;"></i>
+                    <div class="modern-bot-icon" data-theme="tax-ai">
+                        <i class="mdi mdi-robot bot-icon"></i>
                     </div>
-                    <div class="modern-bot-content" style="border: 1.5px solid ${config.botMessageColor}; background-color: #fff0f0;">
+                    <div class="modern-bot-content" data-theme="tax-ai">
                         <div class="modern-bot-text">
                             세금계산서 발행을 위해 아래 정보를 입력해주세요.
                         </div>
@@ -3253,10 +3808,10 @@
                 const formMessage = document.createElement('div');
                 formMessage.className = 'message bot';
                 formMessage.innerHTML = `
-                    <div class="modern-bot-icon" style="background: ${config.botMessageColor};">
-                        <i class="mdi mdi-robot" style="color: white; font-size: 20px;"></i>
+                    <div class="modern-bot-icon" data-theme="tax-ai">
+                        <i class="mdi mdi-robot bot-icon"></i>
                     </div>
-                    <div class="modern-bot-content" style="border: 1.5px solid ${config.botMessageColor}; background-color: #fff0f0;">
+                    <div class="modern-bot-content" data-theme="tax-ai">
                         <div class="modern-bot-text">
                             세금계산서 발행시 발급된 접수번호를 입력해주세요.
                         </div>
@@ -3404,11 +3959,10 @@
                 const chatLayer = document.querySelector('[data-chat-type="tax-ai"]');
                 if (chatLayer && resultText) {
                     const messagesContainer = chatLayer.querySelector('.chat-messages');
-                    const config = this.getChatConfig('tax-ai');
                     const msg = document.createElement('div');
                     msg.className = 'message bot';
                     msg.innerHTML = `
-                        <div class=\"modern-bot-icon\" style=\"background: ${config.botMessageColor};\">\n                    <i class=\"mdi mdi-robot\" style=\"color: white; font-size: 20px;\"></i>\n                </div>\n                <div class=\"modern-bot-content\" style=\"border: 1.5px solid ${config.botMessageColor}; background-color: #fff0f0;\">\n                    <div class=\"modern-bot-text\">\n                        ${resultText}\n                    </div>\n                </div>\n            `;
+                        <div class=\"modern-bot-icon\" data-theme=\"tax-ai\">\n                    <i class=\"mdi mdi-robot bot-icon\"></i>\n                </div>\n                <div class=\"modern-bot-content\" data-theme=\"tax-ai\">\n                    <div class=\"modern-bot-text\">\n                        ${resultText}\n                    </div>\n                </div>\n            `;
                     messagesContainer.appendChild(msg);
                     messagesContainer.scrollTop = messagesContainer.scrollHeight;
                 }
@@ -3581,17 +4135,17 @@
                 popup.style.alignItems = 'center';
                 popup.style.justifyContent = 'center';
                 popup.innerHTML = `
-                    <div style="background:#fff;padding:32px 28px 24px 28px;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.18);min-width:320px;max-width:90vw;text-align:center;">
-                      <div style="font-size:18px;font-weight:600;margin-bottom:18px;">현장개통/해지 신청 안내</div>
-                      <div style="font-size:15px;line-height:1.7;margin-bottom:18px;">
+                    <div class="popup-container">
+                      <div class="popup-title">현장개통/해지 신청 안내</div>
+                      <div class="popup-content">
                         현장개통 또는 해지를 원하실 경우, 아래의 신청/해지서를 다운로드하여 작성 후<br>
-                        <span style='color:#1976d2;font-weight:700;'><b>신청/해지서 업로드</b></span> 버튼을 클릭하셔서 업로드 하시면 됩니다.<br><br>
-                        <span style=\"font-size:13px;font-weight:700;color:#222;\">※ 신청/해지서에는 현장명, 담당자명, 연락처, 요청내용 등이 포함되어야 합니다.</span>
+                        <span class="text-primary"><b>신청/해지서 업로드</b></span> 버튼을 클릭하셔서 업로드 하시면 됩니다.<br><br>
+                        <span class="text-info">※ 신청/해지서에는 현장명, 담당자명, 연락처, 요청내용 등이 포함되어야 합니다.</span>
                       </div>
-                      <div style="display:flex;justify-content:center;gap:12px;margin-top:18px;">
-                        <button id="site-ai-download-btn" style="background:#4caf50;color:#fff;font-weight:600;padding:10px 18px;border:none;border-radius:6px;font-size:15px;cursor:pointer;">신청/해지서 다운로드</button>
-                        <button id="site-ai-upload-btn" style="background:#1976d2;color:#fff;font-weight:600;padding:10px 18px;border:none;border-radius:6px;font-size:15px;cursor:pointer;">신청/해지서 업로드</button>
-                        <button id="site-ai-close-btn" style="background:#ececec;color:#333;font-weight:600;padding:10px 18px;border:none;border-radius:6px;font-size:15px;cursor:pointer;">닫기</button>
+                      <div class="popup-buttons">
+                        <button id="site-ai-download-btn" class="btn-success">신청/해지서 다운로드</button>
+                        <button id="site-ai-upload-btn" class="btn-info">신청/해지서 업로드</button>
+                        <button id="site-ai-close-btn" class="btn-secondary">닫기</button>
                       </div>
                     </div>
                 `;
@@ -3642,8 +4196,8 @@
                                 loading.style.alignItems = 'center';
                                 loading.style.marginTop = '24px';
                                 loading.innerHTML = `
-                                  <svg width="48" height="48" viewBox="22 22 44 44" style="animation: rotate 2s linear infinite;">
-                                    <circle cx="44" cy="44" r="20" fill="none" stroke="#1976d2" stroke-width="4" stroke-linecap="round" stroke-dasharray="90,150" stroke-dashoffset="0" style="animation: dash 1.5s ease-in-out infinite;"></circle>
+                                  <svg width="48" height="48" viewBox="22 22 44 44" class="loading-spinner">
+                                    <circle cx="44" cy="44" r="20" fill="none" stroke="#1976d2" stroke-width="4" stroke-linecap="round" stroke-dasharray="90,150" stroke-dashoffset="0" class="loading-circle"></circle>
                                   </svg>
                                   <style>
                                   @keyframes rotate { 100% { transform: rotate(360deg); } }
