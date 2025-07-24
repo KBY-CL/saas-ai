@@ -42,5 +42,9 @@ alwaysApply: true
 - **Design System**: 일관된 UI 컴포넌트 라이브러리 구축
 - **Storybook**: 컴포넌트 문서화 및 독립적 개발 환경
 
+## 6. CSS 작성 방법
+- **Function and Class**: 컴포넌트나 Class에 디자인을 적용할경우, CSS 선택자 특이성을 활용하여 구현
+- **인라인 스타일 사용 금지** : 인라인스타일로 색상이나 디자인을 하드코딩 하는 방식 금지
+- **Important 사용 지양** : !important는 불가피하게 사용해야할경우가 아니면 되도록 사용 금지
 ---
 위 내용을 숙지하되, .cursor/rules/.project_rules도 항상 명심하고 작업해야해

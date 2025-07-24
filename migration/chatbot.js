@@ -556,10 +556,16 @@
                 .modern-bot-divider {
                     width: 100%;
                     height: 1px;
-                    margin: 8px 0;
+                    margin: 12px 0 6px 0;
                 }
 
                 .modern-bot-bottom {
+                    display: flex;
+                    flex-direction: column;
+                    width: 100%;
+                }
+
+                .modern-bot-bottom-row {
                     display: flex;
                     justify-content: space-between;
                     align-items: center;
@@ -1625,13 +1631,16 @@
                                 <div class="modern-bot-text">${msg.text}</div>
                                 <div class="modern-bot-divider" style="background: ${config.botMessageColor};"></div>
                                 <div class="modern-bot-bottom">
-                                    <span class="modern-bot-time">${msg.time}</span>
-                                    <div style="display: flex; align-items: center;">
-                                        ${ratingHTML}
-                                        <button class="modern-copy-btn bottom-right" onclick="window.chatbotApp.copyToClipboard('${msg.text.replace(/'/g, "\\'")}')" aria-label="메시지 복사">
-                                            <i class="mdi mdi-content-copy" style="font-size: 16px; color: ${config.botMessageColor};"></i>
-                                        </button>
+                                    <div class="modern-bot-bottom-row">
+                                        <span class="modern-bot-time">${msg.time}</span>
+                                        <div style="display: flex; align-items: center;">
+                                            ${ratingHTML}
+                                            <button class="modern-copy-btn bottom-right" onclick="window.chatbotApp.copyToClipboard('${msg.text.replace(/'/g, "\\'")}')" aria-label="메시지 복사">
+                                                <i class="mdi mdi-content-copy" style="font-size: 16px; color: ${config.botMessageColor};"></i>
+                                            </button>
+                                        </div>
                                     </div>
+                                    ${this.getFeedbackTextHTML(type)}
                                 </div>
 
                             </div>
@@ -2797,12 +2806,14 @@
             const starButtons = ratingContainer.querySelectorAll('.modern-star-btn');
             starButtons.forEach((btn, index) => {
                 const starIndex = index + 1;
-                if (starIndex <= rating) {
+                const isRated = starIndex <= rating;
+                
+                if (isRated) {
                     btn.classList.add('rated');
-                    btn.innerHTML = '<i class="mdi mdi-star" style="font-size: 16px; color: #ffd700;"></i>';
+                    btn.innerHTML = '<i class="mdi mdi-star"></i>';
                 } else {
                     btn.classList.remove('rated');
-                    btn.innerHTML = '<i class="mdi mdi-star-outline" style="font-size: 16px; color: #ccc;"></i>';
+                    btn.innerHTML = '<i class="mdi mdi-star-outline"></i>';
                 }
             });
         }
@@ -2909,7 +2920,7 @@
                 }
 
                 .modern-star-btn.rated {
-                    background-color: rgba(255, 215, 0, 0.1) !important;
+                    background-color: transparent;
                 }
 
                 .modern-star-btn .mdi {
@@ -2920,22 +2931,30 @@
                     transform: scale(1.1);
                 }
 
-                /* 건설안전 별점 색상 */
-                .modern-star-btn[data-theme="construction-safety"].rated {
-                    background-color: rgba(197, 48, 48, 0.1) !important;
+                /* 별점 기본 스타일 */
+                .modern-star-btn .mdi {
+                    font-size: 16px;
+                    color: #ccc;
+                    transition: all 0.2s ease;
                 }
 
+                /* 건설안전 별점 색상 */
                 .modern-star-btn[data-theme="construction-safety"].rated .mdi {
-                    color: #c53030 !important;
+                    color: #c53030;
                 }
 
                 /* 위험성평가 별점 색상 */
-                .modern-star-btn[data-theme="risk-assessment"].rated {
-                    background-color: rgba(25, 118, 210, 0.1) !important;
+                .modern-star-btn[data-theme="risk-assessment"].rated .mdi {
+                    color: #1976d2;
                 }
 
-                .modern-star-btn[data-theme="risk-assessment"].rated .mdi {
-                    color: #1976d2 !important;
+                /* 피드백 텍스트 스타일 */
+                .modern-feedback-text {
+                    font-size: 10px;
+                    color: #666;
+                    text-align: right;
+                    margin-top: 4px;
+                    padding-right: 8px;
                 }
 
                 /* 세금계산서 버튼 스타일 */
@@ -3096,6 +3115,29 @@
 
         /**
          * <pre>
+         * [별점 색상 가져오기]
+         * </pre>
+         * 
+         * @param {string} type 채팅 타입
+         * @param {boolean} isRated 별점 클릭 여부
+         * @returns {string} 별점 색상
+         */
+        getStarColor(type, isRated) {
+            if (!isRated) {
+                return '#ccc'; // 클릭하지 않은 별점은 회색
+            }
+            
+            // 채팅방별 별점 색상
+            const starColorMap = {
+                'construction-safety': '#c53030', // 건설안전 - 빨간색
+                'risk-assessment': '#1976d2'      // 위험성평가 - 파란색
+            };
+            
+            return starColorMap[type] || '#ffd700'; // 기본값 - 노란색
+        }
+
+        /**
+         * <pre>
          * [별점 HTML 생성]
          * </pre>
          * 
@@ -3115,14 +3157,13 @@
             for (let i = 1; i <= 5; i++) {
                 const isRated = i <= currentRating;
                 const starIcon = isRated ? 'mdi-star' : 'mdi-star-outline';
-                const starColor = isRated ? '#ffd700' : '#ccc';
                 
                 starsHTML += `
                     <button class="modern-star-btn ${isRated ? 'rated' : ''}" 
                             data-theme="${type}"
                             onclick="window.chatbotApp.rateMessage('${type}', '${messageId}', ${i})" 
                             aria-label="${i}점">
-                        <i class="mdi ${starIcon}" style="font-size: 16px; color: ${starColor};"></i>
+                        <i class="mdi ${starIcon}"></i>
                     </button>
                 `;
             }
@@ -3883,6 +3924,21 @@
                 }
             }
             // ...기타 버튼 처리...
+        }
+
+        /**
+         * <pre>
+         * [피드백 텍스트 HTML 생성]
+         * </pre>
+         * 
+         * @param {string} type 채팅방 타입
+         * @returns {string} 피드백 텍스트 HTML
+         */
+        getFeedbackTextHTML(type) {
+            const feedbackRooms = ['construction-safety', 'risk-assessment'];
+            return feedbackRooms.includes(type) ? 
+                '<div class="modern-feedback-text">※답변에 대해 점수를 피드백해주세요. 더 좋은 답변을 위해 노력하겠습니다.</div>' : 
+                '';
         }
     }
 
