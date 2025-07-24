@@ -197,41 +197,7 @@
                     font-feature-settings: 'liga' 1, 'kern' 1;
                 }
 
-                /* 메인 컨테이너 */
-                .main-container {
-                    min-height: 100vh;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    padding: 20px;
-                }
 
-                .content-area {
-                    width: 100%;
-                    max-width: 600px;
-                }
-
-                .welcome-card {
-                    background: white;
-                    border-radius: 16px;
-                    padding: 48px;
-                    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-                    text-align: center;
-                }
-
-                .welcome-title {
-                    font-size: 28px;
-                    font-weight: 700;
-                    color: #212121;
-                    margin-bottom: 24px;
-                    letter-spacing: -0.02em;
-                }
-
-                .welcome-text {
-                    font-size: 16px;
-                    color: #666;
-                    margin-bottom: 12px;
-                }
 
                 /* 플로팅 메뉴 */
                 .floating-menu.pill-menu {
@@ -1437,18 +1403,7 @@
         createRequiredElements() {
             // 메인 컨테이너 생성
             if (!document.querySelector('.main-container')) {
-                const mainContainer = document.createElement('div');
-                mainContainer.className = 'main-container';
-                mainContainer.innerHTML = `
-                    <div class="content-area">
-                        <div class="welcome-card">
-                            <h1 class="welcome-title">AI 건설안전 도우미 챗봇</h1>
-                            <p class="welcome-text">플로팅 메뉴가 화면 우측에 표시됩니다.</p>
-                            <p class="welcome-text">각 버튼을 클릭하여 기능을 테스트해보세요.</p>
-                        </div>
-                    </div>
-                `;
-                document.body.appendChild(mainContainer);
+
             }
 
             // 플로팅 메뉴 컨테이너 생성
@@ -1525,10 +1480,10 @@
                   <div class="floating-menu-root">
                     <div class="floating-menu-sidebar">
                       <div class="sidebar-logo">
-                        <img src="symbol-kosha.png" alt="logo" />
+                        <img src="images/logo/symbol-kosha.png" alt="logo" />
                       </div>
                       <div class="sidebar-chat">
-                        <img src="chat_icon.png" alt="chat" />
+                        <img src="images/logo/chat_icon.png" alt="chat" />
                       </div>
                     </div>
                     <div class="floating-menu-main">
@@ -1873,7 +1828,7 @@
                     botMessageColor: '#1976d2',
                     userMessageColor: '#1976d2',
                     placeholder: '위험성평가에 대해 궁금한 것을 물어보세요...',
-                    welcomeMessage: '안녕하세요? 저는 위험성평가 도우미입니다.\n\n작업장소와 작업공종을 알려주시면 해당 작업의 위험요인을 분석하고 평가 방법을 안내해드리겠습니다.\n\n위험성평가는 작업 전 필수 절차로, 안전한 작업 환경을 조성하는 데 중요한 역할을 합니다.'
+                    welcomeMessage: '안녕하세요? 저는 위험성평가 도우미입니다.\n\n 위험성평가 서비스를 사용하시는데 어려움이 많으시죠?\n위험성평가 사용방법을 안내해드리겠습니다.\n\n(예시: 추가위험발굴 메뉴에서 지시를 하였는데 원청사에서 조치도 같은 메뉴에서 하고 싶어)'
                 },
                 'tax-ai': {
                     title: '세금계산서 도우미',
@@ -2473,13 +2428,54 @@
         // 음성 인식 관련 상태
         recognitionMap = {};
         isListeningMap = {};
-        micPermissionGranted = false;
+        micPermissionGranted = this.loadMicPermissionState();
 
         /**
          * <pre>
          * [마이크 권한 상태 확인]
          * </pre>
          * @returns {Promise<boolean>} 권한 상태
+         */
+        /**
+         * <pre>
+         * [마이크 권한 상태 로드]
+         * </pre>
+         * 
+         * @returns {boolean|undefined} 저장된 권한 상태 (true: 허용, false: 거부, undefined: 미확인)
+         */
+        loadMicPermissionState() {
+            try {
+                const saved = localStorage.getItem('chatbot_mic_permission');
+                if (saved === 'true') return true;
+                if (saved === 'false') return false;
+                return undefined;
+            } catch (e) {
+                return undefined;
+            }
+        }
+
+        /**
+         * <pre>
+         * [마이크 권한 상태 저장]
+         * </pre>
+         * 
+         * @param {boolean} state 권한 상태
+         */
+        saveMicPermissionState(state) {
+            try {
+                localStorage.setItem('chatbot_mic_permission', state.toString());
+                console.log('마이크 권한 상태 저장:', state);
+            } catch (e) {
+                console.log('로컬스토리지 저장 실패');
+            }
+        }
+
+        /**
+         * <pre>
+         * [마이크 권한 확인]
+         * </pre>
+         * 
+         * @returns {Promise<boolean>} 권한 확인 결과
          */
         async checkMicPermission() {
             try {
@@ -2498,22 +2494,38 @@
          * @param {string} type 채팅 타입
          */
         async requestMicPermission(type) {
-            // 이미 권한이 있는지 먼저 확인
-            const hasPermission = await this.checkMicPermission();
-            if (hasPermission) {
-                this.micPermissionGranted = true;
-                localStorage.setItem('micPermissionGranted', 'true');
-                return true;
+            // 브라우저 권한 상태 실시간 확인
+            try {
+                if (navigator.permissions) {
+                    const permissionStatus = await navigator.permissions.query({ name: 'microphone' });
+                    console.log('현재 브라우저 권한 상태:', permissionStatus.state);
+                    
+                    if (permissionStatus.state === 'granted') {
+                        this.micPermissionGranted = true;
+                        this.saveMicPermissionState(true);
+                        return true;
+                    } else if (permissionStatus.state === 'denied') {
+                        this.micPermissionGranted = false;
+                        this.saveMicPermissionState(false);
+                        this.showNotification('마이크 권한이 거부되었습니다. 브라우저 설정에서 권한을 허용해주세요.');
+                        return false;
+                    }
+                }
+            } catch (e) {
+                console.log('권한 상태 확인 실패:', e.message);
             }
 
+            // 권한이 없거나 미확인 상태인 경우 권한 요청
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 stream.getTracks().forEach(track => track.stop()); // 권한만 확인하고 스트림은 즉시 중지
                 this.micPermissionGranted = true;
-                localStorage.setItem('micPermissionGranted', 'true');
+                this.saveMicPermissionState(true);
                 return true;
             } catch (error) {
                 console.error('마이크 권한 요청 실패:', error);
+                this.micPermissionGranted = false;
+                this.saveMicPermissionState(false);
                 this.showNotification('마이크 권한이 필요합니다.');
                 return false;
             }
@@ -2540,8 +2552,26 @@
                     return;
                 }
 
-                // 권한 체크 및 요청 (이미 권한이 있으면 요청하지 않음)
-                if (!this.micPermissionGranted) {
+                // 브라우저 권한 상태 실시간 확인
+                try {
+                    if (navigator.permissions) {
+                        const permissionStatus = await navigator.permissions.query({ name: 'microphone' });
+                        if (permissionStatus.state === 'granted') {
+                            this.micPermissionGranted = true;
+                            this.saveMicPermissionState(true);
+                        } else if (permissionStatus.state === 'denied') {
+                            this.micPermissionGranted = false;
+                            this.saveMicPermissionState(false);
+                            this.showNotification('마이크 권한이 거부되었습니다. 브라우저 설정에서 권한을 허용해주세요.');
+                            return;
+                        }
+                    }
+                } catch (e) {
+                    console.log('권한 상태 확인 실패:', e.message);
+                }
+
+                // 권한이 없거나 미확인 상태인 경우 권한 요청
+                if (this.micPermissionGranted === undefined || this.micPermissionGranted === false) {
                     const permissionGranted = await this.requestMicPermission(type);
                     if (!permissionGranted) return;
                 }
@@ -2556,6 +2586,8 @@
 
                 recognition.onstart = () => {
                     this.isListeningMap[type] = true;
+                    this.micPermissionGranted = true; // 성공적으로 시작되면 권한 있음
+                    this.saveMicPermissionState(true); // 로컬스토리지에 저장
                     micBtn.innerHTML = `<i class="mdi mdi-microphone mic-icon active"></i>`;
                     this.showNotification('음성 인식이 시작되었습니다. 말씀해 주세요.');
                     console.log('음성 인식 시작');
@@ -2581,7 +2613,18 @@
 
                 recognition.onerror = (event) => {
                     console.error('음성 인식 오류:', event.error);
-                    this.showNotification('음성 인식 오류: ' + event.error);
+                    
+                    // 권한 관련 오류 처리
+                    if (event.error === 'not-allowed') {
+                        this.micPermissionGranted = false;
+                        this.saveMicPermissionState(false);
+                        this.showNotification('마이크 권한이 거부되었습니다.');
+                    } else if (event.error === 'no-speech') {
+                        this.showNotification('음성이 감지되지 않았습니다.');
+                    } else {
+                        this.showNotification('음성 인식 오류: ' + event.error);
+                    }
+                    
                     this.isListeningMap[type] = false;
                     micBtn.innerHTML = `<i class="mdi mdi-microphone-outline mic-icon"></i>`;
                 };
@@ -2845,7 +2888,7 @@
             confirmDiv.style.left = left;
             confirmDiv.style.top = top;
             confirmDiv.style.transform = `translate(${translate})`;
-            confirmDiv.style.background = 'rgba(0,0,0,0.25)';
+            confirmDiv.style.background = 'rgba(0,0,0,0)';
             confirmDiv.style.zIndex = '99999';
             confirmDiv.innerHTML = `
                                 <div class="popup-container">
@@ -3636,12 +3679,64 @@
                 .submit-btn {
                     background: #ff8f00;
                     color: white;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 8px;
                 }
 
                 .submit-btn:hover {
                     background: #e67e00;
                     transform: translateY(-1px);
                     box-shadow: 0 4px 12px rgba(255, 143, 0, 0.3);
+                }
+
+                .submit-btn:disabled {
+                    background: #ccc;
+                    cursor: not-allowed;
+                    transform: none;
+                    box-shadow: none;
+                }
+
+                /* 로딩 스피너 */
+                .loading-spinner {
+                    display: inline-block;
+                    width: 16px;
+                    height: 16px;
+                    border: 2px solid rgba(255, 255, 255, 0.3);
+                    border-radius: 50%;
+                    border-top-color: #fff;
+                    animation: spin 1s ease-in-out infinite;
+                }
+
+                .loading-spinner-large {
+                    display: inline-block;
+                    width: 24px;
+                    height: 24px;
+                    border: 3px solid rgba(255, 143, 0, 0.3);
+                    border-radius: 50%;
+                    border-top-color: #ff8f00;
+                    animation: spin 1s ease-in-out infinite;
+                    margin-right: 12px;
+                }
+
+                @keyframes spin {
+                    to { transform: rotate(360deg); }
+                }
+
+                .loading-text {
+                    opacity: 0.8;
+                }
+
+                .loading-container {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    padding: 20px;
+                }
+
+                .loading-message .modern-bot-text {
+                    text-align: center;
                 }
 
                 .submit-btn:active {
@@ -3925,6 +4020,16 @@
          */
         handleTaxFormSubmit(event) {
             event.preventDefault();
+            
+            // 로딩 메시지 추가
+            const chatLayer = document.querySelector('[data-chat-type="tax-ai"]');
+            if (chatLayer) {
+                const messagesContainer = chatLayer.querySelector('.chat-messages');
+                const loadingMsg = this.createLoadingMessage('tax-ai', '세금계산서 발행 중...');
+                messagesContainer.appendChild(loadingMsg);
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            }
+            
             const formData = new FormData(event.target);
             const data = Object.fromEntries(formData.entries());
 
@@ -3955,8 +4060,13 @@
             })
             .then(res => res.ok ? res.text() : Promise.reject(res))
             .then(resultText => {
+                // 로딩 메시지 제거
+                const loadingMsg = chatLayer.querySelector('.loading-message');
+                if (loadingMsg) {
+                    loadingMsg.remove();
+                }
+                
                 // n8n에서 반환한 안내 메시지를 그대로 채팅창에 출력 (text)
-                const chatLayer = document.querySelector('[data-chat-type="tax-ai"]');
                 if (chatLayer && resultText) {
                     const messagesContainer = chatLayer.querySelector('.chat-messages');
                     const msg = document.createElement('div');
@@ -3968,6 +4078,12 @@
                 }
             })
             .catch(err => {
+                // 로딩 메시지 제거
+                const loadingMsg = chatLayer.querySelector('.loading-message');
+                if (loadingMsg) {
+                    loadingMsg.remove();
+                }
+                
                 alert('세금계산서 발행 요청 전송에 실패했습니다. 다시 시도해 주세요.');
             });
         }
@@ -4031,13 +4147,74 @@
                         
                         <div class="form-submit">
                             <div class="button-group">
-                                <button type="submit" class="submit-btn">조회</button>
+                                <button type="submit" class="submit-btn" id="tax-search-submit-btn">조회</button>
                                 <button type="button" class="cancel-btn" onclick="window.chatbotApp.handleTaxFormCancel()">취소</button>
                             </div>
                         </div>
                     </form>
                 </div>
             `;
+        }
+
+        /**
+         * <pre>
+         * [세금계산서 조회 로딩 메시지 생성]
+         * </pre>
+         * 
+         * @param {string} type 채팅 타입
+         * @returns {HTMLElement} 로딩 메시지 요소
+         */
+        createTaxSearchLoadingMessage(type) {
+            const config = this.getChatConfig(type);
+            const loadingMsg = document.createElement('div');
+            loadingMsg.className = 'message bot loading-message';
+            loadingMsg.innerHTML = `
+                <div class="modern-bot-icon" style="background: ${config.botMessageColor};">
+                    <i class="mdi mdi-robot" style="color: white; font-size: 20px;"></i>
+                </div>
+                <div class="modern-bot-content" style="border: 1.5px solid ${config.botMessageColor}; background-color: #fff0f0;">
+                    <div class="modern-bot-text">
+                        <div class="loading-container">
+                            <div class="loading-spinner-large"></div>
+                            <div class="loading-text">세금계산서 조회 중...</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            return loadingMsg;
+        }
+
+        /**
+         * <pre>
+         * [공통 로딩 메시지 생성]
+         * </pre>
+         * 
+         * @param {string} type 채팅 타입
+         * @param {string} loadingText 로딩 텍스트
+         * @returns {HTMLElement} 로딩 메시지 요소
+         */
+        createLoadingMessage(type, loadingText) {
+            const config = this.getChatConfig(type);
+            const loadingMsg = document.createElement('div');
+            loadingMsg.className = 'message bot loading-message';
+            
+            // 현장개통/해지 채팅방의 경우 연한 연두색 배경 사용
+            const backgroundColor = type === 'site-ai' ? '#e6f4ea' : '#fff0f0';
+            
+            loadingMsg.innerHTML = `
+                <div class="modern-bot-icon" style="background: ${config.botMessageColor};">
+                    <i class="mdi mdi-robot" style="color: white; font-size: 20px;"></i>
+                </div>
+                <div class="modern-bot-content" style="border: 1.5px solid ${config.botMessageColor}; background-color: ${backgroundColor};">
+                    <div class="modern-bot-text">
+                        <div class="loading-container">
+                            <div class="loading-spinner-large"></div>
+                            <div class="loading-text">${loadingText}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            return loadingMsg;
         }
 
         /**
@@ -4049,6 +4226,12 @@
          */
         handleTaxSearchFormSubmit(event) {
             event.preventDefault();
+            
+            // 버튼 비활성화
+            const submitBtn = event.target.querySelector('#tax-search-submit-btn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = '조회 중...';
+            
             const formData = new FormData(event.target);
             const data = Object.fromEntries(formData.entries());
             const now = new Date();
@@ -4060,6 +4243,15 @@
                 actionNo: 2 // 조회: 2
             };
 
+            // 로딩 메시지 추가
+            const chatLayer = document.querySelector('[data-chat-type="tax-ai"]');
+            if (chatLayer) {
+                const messagesContainer = chatLayer.querySelector('.chat-messages');
+                const loadingMsg = this.createTaxSearchLoadingMessage('tax-ai');
+                messagesContainer.appendChild(loadingMsg);
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            }
+
             fetch('https://ai-chatbot.myconst.com/webhook/chatbot/tax', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -4067,8 +4259,17 @@
             })
             .then(res => res.ok ? res.text() : Promise.reject(res))
             .then(resultText => {
+                // 로딩 메시지 제거
+                const loadingMsg = chatLayer.querySelector('.loading-message');
+                if (loadingMsg) {
+                    loadingMsg.remove();
+                }
+                
+                // 버튼 상태 복원
+                submitBtn.disabled = false;
+                submitBtn.textContent = '조회';
+                
                 // n8n에서 반환한 안내 메시지를 그대로 채팅창에 출력 (text)
-                const chatLayer = document.querySelector('[data-chat-type="tax-ai"]');
                 if (chatLayer && resultText) {
                     const messagesContainer = chatLayer.querySelector('.chat-messages');
                     const config = this.getChatConfig('tax-ai');
@@ -4081,6 +4282,16 @@
                 }
             })
             .catch(err => {
+                // 로딩 메시지 제거
+                const loadingMsg = chatLayer.querySelector('.loading-message');
+                if (loadingMsg) {
+                    loadingMsg.remove();
+                }
+                
+                // 버튼 상태 복원
+                submitBtn.disabled = false;
+                submitBtn.textContent = '조회';
+                
                 alert('세금계산서 조회 요청 전송에 실패했습니다. 다시 시도해 주세요.');
             });
         }
@@ -4179,38 +4390,18 @@
                     fileInput.accept = '*/*';
                     fileInput.onchange = () => {
                         if (fileInput.files && fileInput.files.length > 0) {
-                            // 업로드 버튼, 다운로드 버튼, 닫기 버튼 비활성화
-                            const uploadBtn = document.getElementById('site-ai-upload-btn');
-                            const downloadBtn = document.getElementById('site-ai-download-btn');
-                            const closeBtn = document.getElementById('site-ai-close-btn');
-                            if (uploadBtn) uploadBtn.disabled = true;
-                            if (downloadBtn) downloadBtn.disabled = true;
-                            if (closeBtn) closeBtn.disabled = true;
-                            // 로딩바 추가
-                            let loading = document.getElementById('site-ai-loading');
-                            if (!loading) {
-                                loading = document.createElement('div');
-                                loading.id = 'site-ai-loading';
-                                loading.style.display = 'flex';
-                                loading.style.justifyContent = 'center';
-                                loading.style.alignItems = 'center';
-                                loading.style.marginTop = '24px';
-                                loading.innerHTML = `
-                                  <svg width="48" height="48" viewBox="22 22 44 44" class="loading-spinner">
-                                    <circle cx="44" cy="44" r="20" fill="none" stroke="#1976d2" stroke-width="4" stroke-linecap="round" stroke-dasharray="90,150" stroke-dashoffset="0" class="loading-circle"></circle>
-                                  </svg>
-                                  <style>
-                                  @keyframes rotate { 100% { transform: rotate(360deg); } }
-                                  @keyframes dash {
-                                    0% { stroke-dasharray: 1,150; stroke-dashoffset: 0; }
-                                    50% { stroke-dasharray: 90,150; stroke-dashoffset: -35; }
-                                    100% { stroke-dasharray: 90,150; stroke-dashoffset: -124; }
-                                  }
-                                  </style>
-                                `;
-                                const popupInner = document.querySelector('#site-ai-popup > div');
-                                if (popupInner) popupInner.appendChild(loading);
+                            // 팝업 닫기
+                            popup.remove();
+                            
+                            // 로딩 메시지 추가
+                            const chatLayer = document.querySelector('.chat-layer[data-chat-type="site-ai"]');
+                            if (chatLayer) {
+                                const messagesContainer = chatLayer.querySelector('.chat-messages');
+                                const loadingMsg = this.createLoadingMessage('site-ai', '신청/해지서 업로드 중...');
+                                messagesContainer.appendChild(loadingMsg);
+                                messagesContainer.scrollTop = messagesContainer.scrollHeight;
                             }
+                            
                             const formData = new FormData();
                             formData.append('file', fileInput.files[0]);
                             formData.append('actionNo', 2);
@@ -4220,85 +4411,30 @@
                             })
                             .then(res => res.ok ? res.text() : Promise.reject(res))
                             .then(resultText => {
-                                let result;
-                                try {
-                                    result = JSON.parse(resultText);
-                                } catch (e) {
-                                    // 실패 안내를 챗봇 메시지로 출력
-                                    const chatLayer = document.querySelector('.chat-layer[data-chat-type="site-ai"]');
-                                    if (chatLayer) {
-                                        const messagesContainer = chatLayer.querySelector('.chat-messages');
-                                        const config = window.chatbotApp.getChatConfig('site-ai');
-                                        const msg = document.createElement('div');
-                                        msg.className = 'message bot';
-                                        msg.innerHTML = `
-                                            <div class=\"modern-bot-icon\" style=\"background: ${config.botMessageColor};\">
-                                                <i class=\"mdi mdi-robot\" style=\"color: white; font-size: 20px;\"></i>
-                                            </div>
-                                            <div class=\"modern-bot-content\" style=\"border: 1.5px solid ${config.botMessageColor}; background-color: ${window.chatbotApp.getBotBackgroundColor('site-ai', config.botMessageColor)};\">
-                                                <div class=\"modern-bot-text\">
-                                                    ${resultText || '업로드 결과를 확인할 수 없습니다.'}
-                                                </div>
-                                            </div>
-                                        `;
-                                        messagesContainer.appendChild(msg);
-                                        messagesContainer.scrollTop = messagesContainer.scrollHeight;
-                                    }
-                                    // 로딩바 제거, 팝업 닫기
-                                    if (loading) loading.remove();
-                                    const popup = document.getElementById('site-ai-popup');
-                                    if (popup) popup.remove();
-                                    return;
+                                // 로딩 메시지 제거
+                                const loadingMsg = chatLayer.querySelector('.loading-message');
+                                if (loadingMsg) {
+                                    loadingMsg.remove();
                                 }
-                                if (result && result.success && result.response) {
-                                    const chatLayer = document.querySelector('.chat-layer[data-chat-type="site-ai"]');
-                                    if (chatLayer) {
-                                        const messagesContainer = chatLayer.querySelector('.chat-messages');
-                                        const config = window.chatbotApp.getChatConfig('site-ai');
-                                        const msg = document.createElement('div');
-                                        msg.className = 'message bot';
-                                        msg.innerHTML = `
-                                            <div class=\"modern-bot-icon site-ai-theme\">
-                                                <i class=\"mdi mdi-robot\" style=\"color: white; font-size: 20px;\"></i>
+                                
+                                // 서버 응답을 직접 표시
+                                if (chatLayer) {
+                                    const messagesContainer = chatLayer.querySelector('.chat-messages');
+                                    const config = this.getChatConfig('site-ai');
+                                    const msg = document.createElement('div');
+                                    msg.className = 'message bot';
+                                    msg.innerHTML = `
+                                        <div class=\"modern-bot-icon\" style=\"background: ${config.botMessageColor};\">
+                                            <i class=\"mdi mdi-robot\" style=\"color: white; font-size: 20px;\"></i>
+                                        </div>
+                                        <div class=\"modern-bot-content\" style=\"border: 1.5px solid ${config.botMessageColor}; background-color: ${this.getBotBackgroundColor('site-ai', config.botMessageColor)};\">
+                                            <div class=\"modern-bot-text\">
+                                                ${resultText || '업로드가 완료되었습니다.'}
                                             </div>
-                                            <div class=\"modern-bot-content site-ai-theme\">
-                                                <div class=\"modern-bot-text\">
-                                                    ${result.response}
-                                                </div>
-                                            </div>
-                                        `;
-                                        messagesContainer.appendChild(msg);
-                                        messagesContainer.scrollTop = messagesContainer.scrollHeight;
-                                    }
-                                    // 업로드 성공 시 팝업 닫기
-                                    if (loading) loading.remove();
-                                    const popup = document.getElementById('site-ai-popup');
-                                    if (popup) popup.remove();
-                                } else {
-                                    // 실패 안내를 챗봇 메시지로 출력
-                                    const chatLayer = document.querySelector('.chat-layer[data-chat-type="site-ai"]');
-                                    if (chatLayer) {
-                                        const messagesContainer = chatLayer.querySelector('.chat-messages');
-                                        const config = window.chatbotApp.getChatConfig('site-ai');
-                                        const msg = document.createElement('div');
-                                        msg.className = 'message bot';
-                                        msg.innerHTML = `
-                                            <div class=\"modern-bot-icon site-ai-theme\">
-                                                <i class=\"mdi mdi-robot\" style=\"color: white; font-size: 20px;\"></i>
-                                            </div>
-                                            <div class=\"modern-bot-content site-ai-theme\">
-                                                <div class=\"modern-bot-text\">
-                                                    ${resultText || '업로드 결과를 확인할 수 없습니다.'}
-                                                </div>
-                                            </div>
-                                        `;
-                                        messagesContainer.appendChild(msg);
-                                        messagesContainer.scrollTop = messagesContainer.scrollHeight;
-                                    }
-                                    // 로딩바 제거, 팝업 닫기
-                                    if (loading) loading.remove();
-                                    const popup = document.getElementById('site-ai-popup');
-                                    if (popup) popup.remove();
+                                        </div>
+                                    `;
+                                    messagesContainer.appendChild(msg);
+                                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
                                 }
                             })
                             .catch(() => {
@@ -4398,33 +4534,13 @@
                             receiptInput.focus();
                             return;
                         }
-                        // 버튼 비활성화
-                        form.querySelector('.submit-btn').disabled = true;
-                        form.querySelector('.cancel-btn').disabled = true;
-                        // 로딩바 표시
-                        let loading = document.getElementById('site-ai-search-loading');
-                        if (!loading) {
-                            loading = document.createElement('div');
-                            loading.id = 'site-ai-search-loading';
-                            loading.style.display = 'flex';
-                            loading.style.justifyContent = 'center';
-                            loading.style.alignItems = 'center';
-                            loading.style.marginTop = '18px';
-                            loading.innerHTML = `
-                              <svg width=\"36\" height=\"36\" viewBox=\"22 22 44 44\" style=\"animation: rotate 2s linear infinite;\">
-                                <circle cx=\"44\" cy=\"44\" r=\"20\" fill=\"none\" stroke=\"#4caf50\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-dasharray=\"90,150\" stroke-dashoffset=\"0\" style=\"animation: dash 1.5s ease-in-out infinite;\"></circle>
-                              </svg>
-                              <style>
-                              @keyframes rotate { 100% { transform: rotate(360deg); } }
-                              @keyframes dash {
-                                0% { stroke-dasharray: 1,150; stroke-dashoffset: 0; }
-                                50% { stroke-dasharray: 90,150; stroke-dashoffset: -35; }
-                                100% { stroke-dasharray: 90,150; stroke-dashoffset: -124; }
-                              }
-                              </style>
-                            `;
-                            msg.querySelector('.modern-bot-content').appendChild(loading);
-                        }
+                        // 입력폼 메시지 제거
+                        msg.remove();
+                        
+                        // 로딩 메시지 추가
+                        const loadingMsg = this.createLoadingMessage('site-ai', '현장개통/해지 조회 중...');
+                        messagesContainer.appendChild(loadingMsg);
+                        messagesContainer.scrollTop = messagesContainer.scrollHeight;
                         // 조회 요청
                         fetch('https://ai-chatbot.myconst.com/webhook/chatbot/project', {
                             method: 'POST',
@@ -4433,8 +4549,12 @@
                         })
                         .then(res => res.ok ? res.text() : Promise.reject(res))
                         .then(responseText => {
-                            // 입력폼 메시지 제거
-                            msg.remove();
+                            // 로딩 메시지 제거
+                            const loadingMsg = messagesContainer.querySelector('.loading-message');
+                            if (loadingMsg) {
+                                loadingMsg.remove();
+                            }
+                            
                             // 응답 메시지 챗봇에 출력
                             const resultMsg = document.createElement('div');
                             resultMsg.className = 'message bot';
@@ -4452,8 +4572,12 @@
                             messagesContainer.scrollTop = messagesContainer.scrollHeight;
                         })
                         .catch(() => {
-                            // 입력폼 메시지 제거
-                            msg.remove();
+                            // 로딩 메시지 제거
+                            const loadingMsg = messagesContainer.querySelector('.loading-message');
+                            if (loadingMsg) {
+                                loadingMsg.remove();
+                            }
+                            
                             // 에러 메시지 챗봇에 출력
                             const resultMsg = document.createElement('div');
                             resultMsg.className = 'message bot';
