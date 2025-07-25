@@ -79,7 +79,7 @@
             // 별점 시스템 스타일 추가
             this.addRatingStyles();
             
-            // 현장개통/해제 테마 설정
+            // 현장개통/해지 테마 설정
             this.setSiteAiTheme();
             
             // 필요한 HTML 요소들 동적 생성
@@ -1942,12 +1942,86 @@
             // Clear input
             input.value = '';
 
-            // Simulate AI response
+            // === 위험성평가 도우미 n8n 연동 ===
+            if (type === 'risk-assessment') {
+                // 로딩 메시지 추가
+                const loadingMsg = this.createLoadingMessage('risk-assessment', '답변 생성 중...');
+                messagesContainer.appendChild(loadingMsg);
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+                fetch('https://ai-chatbot.myconst.com/webhook/chatbot/system', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ question: message })
+                })
+                .then(res => res.ok ? res.json() : Promise.reject(res))
+                .then(response => {
+                    if (loadingMsg) loadingMsg.remove();
+                    let answer = '';
+                    if (Array.isArray(response) && response.length > 0 && response[0].response) {
+                        answer = response[0].response;
+                    } else if (response.answer) {
+                        answer = response.answer;
+                    } else if (response.response) {
+                        answer = response.response;
+                    } else {
+                        answer = '답변을 받아오지 못했습니다.';
+                    }
+                    // 메시지 ID 생성
+                    const messageId = `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+                    const ratingHTML = this.createRatingHTML(type, messageId);
+                    const botMessage = document.createElement('div');
+                    botMessage.className = 'message bot';
+                    botMessage.setAttribute('data-message-id', messageId);
+                    botMessage.innerHTML = `
+                        <div class="modern-bot-icon" data-theme="${type}">
+                            <i class="mdi mdi-robot bot-icon"></i>
+                        </div>
+                        <div class="modern-bot-content" data-theme="${type}">
+                            <div class="modern-bot-text">${answer}</div>
+                            <div class="modern-bot-divider" data-theme="${type}"></div>
+                            <div class="modern-bot-bottom">
+                                <div class="modern-bot-bottom-row">
+                                    <span class="modern-bot-time">${this.getCurrentTime()}</span>
+                                    <div class="flex-center">
+                                        ${ratingHTML}
+                                        <button class="modern-copy-btn bottom-right" onclick="window.chatbotApp.copyToClipboard('${answer.replace(/'/g, "\\'")}')" aria-label="메시지 복사">
+                                            <i class="mdi mdi-content-copy copy-icon-theme" data-theme="${type}"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                ${this.getFeedbackTextHTML(type)}
+                            </div>
+                        </div>
+                    `;
+                    messagesContainer.appendChild(botMessage);
+                    // 메시지 배열에 추가 (최대 30개 유지)
+                    if (!this.messages[type]) this.messages[type] = [];
+                    this.messages[type].push({ role: 'bot', text: answer, time: this.getCurrentTime(), id: messageId });
+                    if (this.messages[type].length > 30) this.messages[type].shift();
+                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                })
+                .catch(() => {
+                    if (loadingMsg) loadingMsg.remove();
+                    const errorMsg = document.createElement('div');
+                    errorMsg.className = 'message bot';
+                    errorMsg.innerHTML = `
+                        <div class="modern-bot-icon" data-theme="${type}">
+                            <i class="mdi mdi-robot bot-icon"></i>
+                        </div>
+                        <div class="modern-bot-content" data-theme="${type}">
+                            <div class="modern-bot-text">답변 생성에 실패했습니다. 다시 시도해 주세요.</div>
+                        </div>
+                    `;
+                    messagesContainer.appendChild(errorMsg);
+                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                });
+                return;
+            }
+            // === 기존 simulateAIResponse ===
             setTimeout(() => {
                 this.simulateAIResponse(chatLayer, type, message);
             }, 1000);
-
-            // Scroll to bottom
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
         }
 
@@ -4198,9 +4272,14 @@
             const loadingMsg = document.createElement('div');
             loadingMsg.className = 'message bot loading-message';
             
-            // 현장개통/해지 채팅방의 경우 연한 연두색 배경 사용
-            const backgroundColor = type === 'site-ai' ? '#e6f4ea' : '#fff0f0';
-            
+            // 현장개통/해지: 연한 연두색, 위험성평가: 연한 파랑색, 그 외: 연한 분홍색
+            let backgroundColor = '#fff0f0';
+            if (type === 'site-ai') {
+                backgroundColor = '#e6f4ea';
+            } else if (type === 'risk-assessment') {
+                backgroundColor = '#e3f2fd';
+            }
+
             loadingMsg.innerHTML = `
                 <div class="modern-bot-icon" style="background: ${config.botMessageColor};">
                     <i class="mdi mdi-robot" style="color: white; font-size: 20px;"></i>
