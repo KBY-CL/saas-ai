@@ -1391,6 +1391,82 @@
                     border: 1.5px solid var(--site-ai-primary, #4caf50) !important;
                     background: var(--site-ai-background, #e6f4ea) !important;
                 }
+
+                /* 마크다운 파싱된 요소들의 간격 조정 */
+                .modern-bot-text h1, .modern-bot-text h2, .modern-bot-text h3 {
+                    margin: 8px 0 4px 0;
+                    font-weight: 600;
+                    line-height: 1.4;
+                }
+                .modern-bot-text h1 { font-size: 1.1em; }
+                .modern-bot-text h2 { font-size: 1.05em; }
+                .modern-bot-text h3 { font-size: 1em; }
+                
+                .modern-bot-text p {
+                    margin: 6px 0;
+                    line-height: 1.5;
+                    font-size: 14px;
+                }
+                
+                .modern-bot-text ul, .modern-bot-text ol {
+                    margin: 6px 0 6px 16px;
+                    padding-left: 8px;
+                }
+                
+                .modern-bot-text ul ul, .modern-bot-text ol ol, 
+                .modern-bot-text ul ol, .modern-bot-text ol ul {
+                    margin: 2px 0 2px 16px;
+                }
+                
+                .modern-bot-text li {
+                    margin: 2px 0;
+                    line-height: 1.4;
+                    font-size: 14px;
+                }
+                
+                .modern-bot-text strong { font-weight: 600; }
+                .modern-bot-text em { font-style: italic; }
+                .modern-bot-text code {
+                    background: rgba(0, 0, 0, 0.1);
+                    padding: 1px 3px;
+                    border-radius: 3px;
+                    font-family: monospace;
+                    font-size: 0.9em;
+                }
+                
+                /* 마크다운 테이블 스타일 */
+                .modern-md-table {
+                    border-collapse: collapse;
+                    width: 100%;
+                    margin: 8px 0;
+                    font-size: 13px;
+                    overflow-x: auto;
+                    display: block;
+                }
+                .modern-md-table th, .modern-md-table td {
+                    border: 1px solid #ddd;
+                    padding: 6px 8px;
+                    text-align: left;
+                    word-break: break-all;
+                    white-space: pre-line;
+                }
+                .modern-md-table th {
+                    background: #f5f5f5;
+                    font-weight: 600;
+                }
+                .modern-md-table tr:nth-child(even) td {
+                    background: #fafafa;
+                }
+                
+                /* 첫 번째 요소의 상단 마진 제거 */
+                .modern-bot-text > *:first-child {
+                    margin-top: 0;
+                }
+                
+                /* 마지막 요소의 하단 마진 제거 */
+                .modern-bot-text > *:last-child {
+                    margin-bottom: 0;
+                }
             `;
             document.head.appendChild(style);
         }
@@ -1952,18 +2028,20 @@
                 fetch('https://ai-chatbot.myconst.com/webhook/chatbot/system', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ question: message })
+                    body: JSON.stringify({ question: message, userid: this.getOrCreateSessionId() })
                 })
                 .then(res => res.ok ? res.json() : Promise.reject(res))
                 .then(response => {
                     if (loadingMsg) loadingMsg.remove();
                     let answer = '';
-                    if (Array.isArray(response) && response.length > 0 && response[0].response) {
-                        answer = response[0].response;
+                    if (Array.isArray(response) && response.length > 0) {
+                        answer = response[0].answer || response[0].response || response[0].output;
                     } else if (response.answer) {
                         answer = response.answer;
                     } else if (response.response) {
                         answer = response.response;
+                    } else if (response.output) {
+                        answer = response.output;
                     } else {
                         answer = '답변을 받아오지 못했습니다.';
                     }
@@ -1979,6 +2057,84 @@
                         </div>
                         <div class="modern-bot-content" data-theme="${type}">
                             <div class="modern-bot-text">${answer}</div>
+                            <div class="modern-bot-divider" data-theme="${type}"></div>
+                            <div class="modern-bot-bottom">
+                                <div class="modern-bot-bottom-row">
+                                    <span class="modern-bot-time">${this.getCurrentTime()}</span>
+                                    <div class="flex-center">
+                                        ${ratingHTML}
+                                        <button class="modern-copy-btn bottom-right" onclick="window.chatbotApp.copyToClipboard('${answer.replace(/'/g, "\\'")}')" aria-label="메시지 복사">
+                                            <i class="mdi mdi-content-copy copy-icon-theme" data-theme="${type}"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                ${this.getFeedbackTextHTML(type)}
+                            </div>
+                        </div>
+                    `;
+                    messagesContainer.appendChild(botMessage);
+                    // 메시지 배열에 추가 (최대 30개 유지)
+                    if (!this.messages[type]) this.messages[type] = [];
+                    this.messages[type].push({ role: 'bot', text: answer, time: this.getCurrentTime(), id: messageId });
+                    if (this.messages[type].length > 30) this.messages[type].shift();
+                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                })
+                .catch(() => {
+                    if (loadingMsg) loadingMsg.remove();
+                    const errorMsg = document.createElement('div');
+                    errorMsg.className = 'message bot';
+                    errorMsg.innerHTML = `
+                        <div class="modern-bot-icon" data-theme="${type}">
+                            <i class="mdi mdi-robot bot-icon"></i>
+                        </div>
+                        <div class="modern-bot-content" data-theme="${type}">
+                            <div class="modern-bot-text">답변 생성에 실패했습니다. 다시 시도해 주세요.</div>
+                        </div>
+                    `;
+                    messagesContainer.appendChild(errorMsg);
+                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                });
+                return;
+            }
+            // === 건설안전 전문가 n8n 연동 ===
+            if (type === 'construction-safety') {
+                // 로딩 메시지 추가
+                const loadingMsg = this.createLoadingMessage('construction-safety', '답변 생성 중...');
+                messagesContainer.appendChild(loadingMsg);
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+                fetch('https://ai-chatbot.myconst.com/webhook/99ea553b-9083-40c6-a0f2-11b7776ab22f', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: message, userid: this.getOrCreateSessionId() })
+                })
+                .then(res => res.ok ? res.json() : Promise.reject(res))
+                .then(response => {
+                    if (loadingMsg) loadingMsg.remove();
+                    let answer = '';
+                    if (Array.isArray(response) && response.length > 0) {
+                        answer = response[0].answer || response[0].response || response[0].output;
+                    } else if (response.answer) {
+                        answer = response.answer;
+                    } else if (response.response) {
+                        answer = response.response;
+                    } else if (response.output) {
+                        answer = response.output;
+                    } else {
+                        answer = '답변을 받아오지 못했습니다.';
+                    }
+                    // 메시지 ID 생성
+                    const messageId = `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+                    const ratingHTML = this.createRatingHTML(type, messageId);
+                    const botMessage = document.createElement('div');
+                    botMessage.className = 'message bot';
+                    botMessage.setAttribute('data-message-id', messageId);
+                    botMessage.innerHTML = `
+                        <div class="modern-bot-icon" data-theme="${type}">
+                            <i class="mdi mdi-robot bot-icon"></i>
+                        </div>
+                        <div class="modern-bot-content" data-theme="${type}">
+                            <div class="modern-bot-text">${this.parseMarkdown(answer)}</div>
                             <div class="modern-bot-divider" data-theme="${type}"></div>
                             <div class="modern-bot-bottom">
                                 <div class="modern-bot-bottom-row">
@@ -4696,6 +4852,148 @@
             return feedbackRooms.includes(type) ? 
                 '<div class="modern-feedback-text">※답변에 대해 점수를 피드백해주세요. 더 좋은 답변을 위해 노력하겠습니다.</div>' : 
                 '';
+        }
+
+        /**
+         * <pre>
+         * [세션ID 생성 및 재사용]
+         * </pre>
+         * @returns {string} 세션ID
+         */
+        getOrCreateSessionId() {
+            let sessionId = localStorage.getItem('chatbot_session_id');
+            if (!sessionId) {
+                sessionId = 'chatbot_' + Math.random().toString(36).substr(2, 12);
+                localStorage.setItem('chatbot_session_id', sessionId);
+            }
+            return sessionId;
+        }
+
+        /**
+         * <pre>
+         * [마크다운 파싱 함수]
+         * </pre>
+         * @param {string} text - 마크다운 텍스트
+         * @returns {string} HTML 문자열
+         */
+        parseMarkdown(text) {
+            // 인라인 마크다운 포맷 변환 함수
+            const formatInlineMarkdown = (text) => {
+                return text
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                    .replace(/`(.*?)`/g, '<code>$1</code>');
+            };
+
+            // 줄 단위로 분리
+            const lines = text.split(/\r?\n/);
+            let html = '';
+            let listStack = [];
+            let prevIndent = 0;
+            const listType = (line) => {
+                if (/^\s*\d+\. /.test(line)) return 'ol';
+                if (/^\s*[-*] /.test(line)) return 'ul';
+                return null;
+            };
+            const getIndent = (line) => line.match(/^\s*/)[0].length;
+
+            // 테이블 파싱 함수 (셀 개수 헤더와 맞추기)
+            function parseTableBlock(startIdx) {
+                let tableHtml = '<table class="modern-md-table">';
+                let i = startIdx;
+                // 헤더
+                const headerLine = lines[i];
+                const headerCells = headerLine.split('|').map(cell => cell.trim()).filter((_, idx, arr) => idx !== 0 && idx !== arr.length - 1 || arr.length === 2);
+                const colCount = headerCells.length;
+                tableHtml += '<thead><tr>' + headerCells.map(cell => `<th>${formatInlineMarkdown(cell)}</th>`).join('') + '</tr></thead>';
+                i++;
+                // 구분선(---) 무시
+                if (i < lines.length && /^\s*\|?[-: ]+\|?\s*$/.test(lines[i])) i++;
+                tableHtml += '<tbody>';
+                while (i < lines.length && /^\s*\|.*$/.test(lines[i])) {
+                    // 구분선(---) 줄은 완전히 무시
+                    if (/^\s*\|?[-: ]+\|?\s*$/.test(lines[i])) {
+                        i++;
+                        continue;
+                    }
+                    let rowCells = lines[i].split('|').map(cell => cell.trim()).filter((_, idx, arr) => idx !== 0 && idx !== arr.length - 1 || arr.length === 2);
+                    // 셀 개수 맞추기
+                    while (rowCells.length < colCount) rowCells.push('');
+                    if (rowCells.length > colCount) rowCells.length = colCount;
+                    // 모든 셀이 --- 또는 :---: 등 구분선 패턴이면 해당 행 무시
+                    const isDividerRow = rowCells.every(cell => /^:?-{3,}:?$/.test(cell));
+                    if (isDividerRow) {
+                        i++;
+                        continue;
+                    }
+                    tableHtml += '<tr>' + rowCells.map(cell => `<td>${formatInlineMarkdown(cell)}</td>`).join('') + '</tr>';
+                    i++;
+                }
+                tableHtml += '</tbody></table>';
+                return { tableHtml, nextIdx: i };
+            }
+
+            let i = 0;
+            while (i < lines.length) {
+                let line = lines[i];
+                // 테이블 감지: |로 시작하고, 다음 줄이 |---로 시작하면 테이블로 간주
+                if (/^\s*\|.*\|\s*$/.test(line) && i + 1 < lines.length && /^\s*\|?\s*[-: ]+\|/.test(lines[i + 1])) {
+                    const { tableHtml, nextIdx } = parseTableBlock(i);
+                    html += tableHtml;
+                    i = nextIdx;
+                    prevIndent = 0;
+                    while (listStack.length) html += `</${listStack.pop()}>`;
+                    continue;
+                }
+                // 헤더
+                if (/^### /.test(line)) {
+                    html += `<h3>${formatInlineMarkdown(line.replace(/^### /, ''))}</h3>`;
+                    i++;
+                    continue;
+                }
+                if (/^## /.test(line)) {
+                    html += `<h2>${formatInlineMarkdown(line.replace(/^## /, ''))}</h2>`;
+                    i++;
+                    continue;
+                }
+                if (/^# /.test(line)) {
+                    html += `<h1>${formatInlineMarkdown(line.replace(/^# /, ''))}</h1>`;
+                    i++;
+                    continue;
+                }
+                // 리스트
+                const indent = getIndent(line);
+                const type = listType(line);
+                if (type) {
+                    if (indent > prevIndent) {
+                        html += `<${type}>`;
+                        listStack.push(type);
+                    } else if (indent < prevIndent) {
+                        while (indent < prevIndent && listStack.length) {
+                            html += `</${listStack.pop()}>`;
+                            prevIndent -= 2;
+                        }
+                    }
+                    html += `<li>${formatInlineMarkdown(line.replace(/^\s*([-*]|\d+\.) /, ''))}</li>`;
+                    prevIndent = indent;
+                    i++;
+                    continue;
+                } else {
+                    while (listStack.length) {
+                        html += `</${listStack.pop()}>`;
+                    }
+                    if (line.trim() !== '') {
+                        html += `<p>${formatInlineMarkdown(line)}</p>`;
+                    }
+                    prevIndent = 0;
+                    i++;
+                    continue;
+                }
+            }
+            while (listStack.length) {
+                html += `</${listStack.pop()}>`;
+            }
+            return html;
         }
     }
 
