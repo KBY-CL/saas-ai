@@ -2157,7 +2157,7 @@
                             <i class="mdi mdi-robot bot-icon"></i>
                         </div>
                         <div class="modern-bot-content" data-theme="${type}">
-                            <div class="modern-bot-text">${answer}</div>
+                            <div class="modern-bot-text">${this.parseMarkdown(answer)}</div>
                             <div class="modern-bot-divider" data-theme="${type}"></div>
                             <div class="modern-bot-bottom">
                                 <div class="modern-bot-bottom-row">
