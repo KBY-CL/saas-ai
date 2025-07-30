@@ -1738,13 +1738,16 @@
                         const messageId = msg.id || `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
                         const ratingHTML = this.createRatingHTML(type, messageId);
                         
+                        // AI 메시지의 경우 markdown parsing 적용
+                        const parsedText = this.parseMarkdown(msg.text);
+                        
                         messagesHTML += `
                         <div class="message bot" data-message-id="${messageId}">
                             <div class="modern-bot-icon" data-theme="${type}">
                                 <i class="mdi mdi-robot bot-icon"></i>
                             </div>
                             <div class="modern-bot-content" data-theme="${type}">
-                                <div class="modern-bot-text">${msg.text}</div>
+                                <div class="modern-bot-text">${parsedText}</div>
                                 <div class="modern-bot-divider" data-theme="${type}"></div>
                                 <div class="modern-bot-bottom">
                                     <div class="modern-bot-bottom-row">
