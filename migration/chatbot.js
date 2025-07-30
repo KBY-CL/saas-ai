@@ -1816,7 +1816,7 @@
                         <button class="chat-header-btn" onclick="window.chatbotApp.resizeChatLayer('${type}', 'max')" aria-label="최대화">
                             <i class="mdi mdi-arrow-expand-all header-icon"></i>
                         </button>
-                        <button class="chat-close-btn" onclick="window.chatbotApp.closeChatLayer('${type}')" aria-label="닫기">
+                        <button class="chat-close-btn" onclick="window.chatbotApp.showCloseConfirmation('${type}')" aria-label="닫기">
                             <i class="mdi mdi-close header-icon"></i>
                         </button>
                     </div>
@@ -2429,7 +2429,120 @@
 
         /**
          * <pre>
-         * [채팅 레이어 닫기]
+         * [채팅 레이어 닫기 확인 팝업 표시]
+         * </pre>
+         * 
+         * @param {string} type 채팅 타입
+         */
+        showCloseConfirmation(type) {
+            // 기존 팝업이 있다면 제거
+            const existingPopup = document.querySelector('.close-confirmation-popup');
+            if (existingPopup) {
+                existingPopup.remove();
+            }
+
+            // 채팅 레이어 찾기
+            const chatLayer = document.querySelector(`[data-chat-type="${type}"]`);
+            if (!chatLayer) {
+                console.error('채팅 레이어를 찾을 수 없습니다:', type);
+                return;
+            }
+
+            const popup = document.createElement('div');
+            popup.className = 'close-confirmation-popup';
+            popup.innerHTML = `
+                <div class="close-confirmation-overlay"></div>
+                <div class="close-confirmation-modal">
+                    <div class="close-confirmation-content">
+                        <div class="close-confirmation-title">
+                            <i class="mdi mdi-alert-circle"></i>
+                            채팅방을 나가시겠습니까?
+                        </div>
+                        <div class="close-confirmation-message">
+                            채팅방을 나가시면 채팅내역은 복구되지 않습니다.
+                        </div>
+                        <div class="close-confirmation-buttons">
+                            <button class="close-confirmation-btn confirm-btn" onclick="window.chatbotApp.confirmCloseChatLayer('${type}')">
+                                확인
+                            </button>
+                            <button class="close-confirmation-btn cancel-btn" onclick="window.chatbotApp.hideCloseConfirmation()">
+                                취소
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // 채팅 레이어 내부에 팝업 추가
+            chatLayer.appendChild(popup);
+
+            // ESC 키로 팝업 닫기
+            const handleEscKey = (event) => {
+                if (event.key === 'Escape') {
+                    this.hideCloseConfirmation();
+                    document.removeEventListener('keydown', handleEscKey);
+                }
+            };
+            document.addEventListener('keydown', handleEscKey);
+        }
+
+        /**
+         * <pre>
+         * [채팅 레이어 닫기 확인 팝업 숨기기]
+         * </pre>
+         */
+        hideCloseConfirmation() {
+            const popup = document.querySelector('.close-confirmation-popup');
+            if (popup) {
+                popup.remove();
+            }
+        }
+
+        /**
+         * <pre>
+         * [채팅 레이어 닫기 확인 처리]
+         * </pre>
+         * 
+         * @param {string} type 채팅 타입
+         */
+        confirmCloseChatLayer(type) {
+            // 채팅 내역 초기화
+            if (this.messages[type]) {
+                this.messages[type] = [];
+            }
+            
+            // 채팅 레이어 닫기
+            this.chatLayers[type].bShow = false;
+            this.chatLayers[type].isMinimized = false;
+            
+            // Remove from minimized list
+            const index = this.minimizedChatbots.indexOf(type);
+            if (index > -1) {
+                this.minimizedChatbots.splice(index, 1);
+            }
+            
+            const chatLayer = document.querySelector(`[data-chat-type="${type}"]`);
+            if (chatLayer) {
+                chatLayer.remove();
+            }
+            
+            this.updateMinimizedChatbots();
+            this.saveState();
+            this.renderFloatingMenu();
+            
+            // 채팅방 닫기 시 전체 채팅방 리스트로 복귀
+            if (this.openChatRoomId === type) {
+                this.openChatRoomId = null;
+                this.renderFloatingMenu();
+            }
+            
+            // 팝업 닫기
+            this.hideCloseConfirmation();
+        }
+
+        /**
+         * <pre>
+         * [채팅 레이어 닫기 - 기존 기능 유지]
          * </pre>
          * 
          * @param {string} type 채팅 타입
@@ -3533,6 +3646,113 @@
                     border-radius: 3px;
                     font-family: 'Courier New', monospace;
                     font-size: 13px;
+                }
+
+                /* 채팅방 닫기 확인 팝업 스타일 */
+                .close-confirmation-popup {
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    z-index: 10000;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+
+                .close-confirmation-overlay {
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background-color: rgba(0, 0, 0, 0.5);
+                    backdrop-filter: blur(2px);
+                }
+
+                .close-confirmation-modal {
+                    position: relative;
+                    background: white;
+                    border-radius: 12px;
+                    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+                    max-width: 400px;
+                    width: 90%;
+                    animation: popupFadeIn 0.3s ease-out;
+                }
+
+                @keyframes popupFadeIn {
+                    from {
+                        opacity: 0;
+                        transform: scale(0.9) translateY(-20px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: scale(1) translateY(0);
+                    }
+                }
+
+                .close-confirmation-content {
+                    padding: 24px;
+                }
+
+                .close-confirmation-title {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    font-size: 18px;
+                    font-weight: 600;
+                    color: #333;
+                    margin-bottom: 16px;
+                }
+
+                .close-confirmation-title i {
+                    color: #f57c00;
+                    font-size: 20px;
+                }
+
+                .close-confirmation-message {
+                    font-size: 14px;
+                    color: #666;
+                    line-height: 1.5;
+                    margin-bottom: 24px;
+                }
+
+                .close-confirmation-buttons {
+                    display: flex;
+                    gap: 12px;
+                    justify-content: center;
+                }
+
+                .close-confirmation-btn {
+                    padding: 12px 24px;
+                    border: none;
+                    border-radius: 6px;
+                    font-size: 14px;
+                    font-weight: 500;
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+                    min-width: 80px;
+                    flex: 1;
+                    max-width: 120px;
+                }
+
+                .close-confirmation-btn.cancel-btn {
+                    background-color: #f5f5f5;
+                    color: #666;
+                }
+
+                .close-confirmation-btn.cancel-btn:hover {
+                    background-color: #e0e0e0;
+                }
+
+                .close-confirmation-btn.confirm-btn {
+                    background-color: #f57c00;
+                    color: white;
+                }
+
+                .close-confirmation-btn.confirm-btn:hover {
+                    background-color: #e65100;
                 }
 
                 /* 플로팅 메뉴 스타일 */
