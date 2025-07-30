@@ -2018,6 +2018,104 @@
             // Clear input
             input.value = '';
 
+            // === 건설 안전 전문가 n8n 연동 ===
+            if (type === 'construction-safety') {
+                // 로딩 메시지 추가
+                const loadingMsg = this.createLoadingMessage('construction-safety', '답변 생성 중...');
+                messagesContainer.appendChild(loadingMsg);
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+                console.log('건설 안전 요청 데이터:', { userid: `construction-safety-${Date.now()}`, message: message });
+
+                fetch('https://ai-chatbot.myconst.com/webhook/99ea553b-9083-40c6-a0f2-11b7776ab22f', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        userid: `construction-safety-${Date.now()}`,
+                        message: message 
+                    })
+                })
+                .then(res => {
+                    console.log('n8n 응답 상태:', res.status, res.statusText);
+                    return res.ok ? res.json() : Promise.reject(res);
+                })
+                .then(response => {
+                    if (loadingMsg) loadingMsg.remove();
+                    console.log('건설 안전 n8n 응답:', response); // 디버깅용 로그
+                    let answer = '';
+                    if (Array.isArray(response) && response.length > 0 && response[0].output) {
+                        answer = response[0].output;
+                    } else if (Array.isArray(response) && response.length > 0 && response[0].response) {
+                        answer = response[0].response;
+                    } else if (response.output) {
+                        answer = response.output;
+                    } else if (response.answer) {
+                        answer = response.answer;
+                    } else if (response.response) {
+                        answer = response.response;
+                    } else if (response.message) {
+                        answer = response.message;
+                    } else if (response.text) {
+                        answer = response.text;
+                    } else if (response.content) {
+                        answer = response.content;
+                    } else {
+                        console.log('응답 구조 확인:', JSON.stringify(response, null, 2));
+                        answer = '답변을 받아오지 못했습니다. 응답 구조를 확인해주세요.';
+                    }
+                    // 메시지 ID 생성
+                    const messageId = `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+                    const ratingHTML = this.createRatingHTML(type, messageId);
+                    const botMessage = document.createElement('div');
+                    botMessage.className = 'message bot';
+                    botMessage.setAttribute('data-message-id', messageId);
+                    botMessage.innerHTML = `
+                        <div class="modern-bot-icon" data-theme="${type}">
+                            <i class="mdi mdi-robot bot-icon"></i>
+                        </div>
+                        <div class="modern-bot-content" data-theme="${type}">
+                            <div class="modern-bot-text">${this.parseMarkdown(answer)}</div>
+                            <div class="modern-bot-divider" data-theme="${type}"></div>
+                            <div class="modern-bot-bottom">
+                                <div class="modern-bot-bottom-row">
+                                    <span class="modern-bot-time">${this.getCurrentTime()}</span>
+                                    <div class="flex-center">
+                                        ${ratingHTML}
+                                        <button class="modern-copy-btn bottom-right" onclick="window.chatbotApp.copyToClipboard('${answer.replace(/'/g, "\\'")}')" aria-label="메시지 복사">
+                                            <i class="mdi mdi-content-copy copy-icon-theme" data-theme="${type}"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                ${this.getFeedbackTextHTML(type)}
+                            </div>
+                        </div>
+                    `;
+                    messagesContainer.appendChild(botMessage);
+                    // 메시지 배열에 추가 (최대 30개 유지)
+                    if (!this.messages[type]) this.messages[type] = [];
+                    this.messages[type].push({ role: 'bot', text: answer, time: this.getCurrentTime(), id: messageId });
+                    if (this.messages[type].length > 30) this.messages[type].shift();
+                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                })
+                .catch((error) => {
+                    console.error('건설 안전 n8n 에러:', error);
+                    if (loadingMsg) loadingMsg.remove();
+                    const errorMsg = document.createElement('div');
+                    errorMsg.className = 'message bot';
+                    errorMsg.innerHTML = `
+                        <div class="modern-bot-icon" data-theme="${type}">
+                            <i class="mdi mdi-robot bot-icon"></i>
+                        </div>
+                        <div class="modern-bot-content" data-theme="${type}">
+                            <div class="modern-bot-text">답변 생성에 실패했습니다. 다시 시도해 주세요.<br><small>에러: ${error.message || '알 수 없는 오류'}</small></div>
+                        </div>
+                    `;
+                    messagesContainer.appendChild(errorMsg);
+                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                });
+                return;
+            }
+
             // === 위험성평가 도우미 n8n 연동 ===
             if (type === 'risk-assessment') {
                 // 로딩 메시지 추가
@@ -3341,6 +3439,100 @@
                     text-align: right;
                     margin-top: 4px;
                     padding-right: 8px;
+                }
+
+                /* 마크다운 테이블 스타일 */
+                .modern-md-table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin: 8px 0;
+                    font-size: 14px;
+                }
+
+                .modern-md-table th,
+                .modern-md-table td {
+                    border: 1px solid #ddd;
+                    padding: 8px 12px;
+                    text-align: left;
+                }
+
+                .modern-md-table th {
+                    background-color: #f5f5f5;
+                    font-weight: 600;
+                }
+
+                .modern-md-table tr:nth-child(even) {
+                    background-color: #f9f9f9;
+                }
+
+                .modern-md-table tr:hover {
+                    background-color: #f0f0f0;
+                }
+
+                /* 마크다운 헤더 스타일 */
+                .modern-bot-text h1 {
+                    font-size: 20px;
+                    font-weight: 600;
+                    margin: 16px 0 8px 0;
+                    color: #333;
+                }
+
+                .modern-bot-text h2 {
+                    font-size: 18px;
+                    font-weight: 600;
+                    margin: 14px 0 6px 0;
+                    color: #333;
+                }
+
+                .modern-bot-text h3 {
+                    font-size: 16px;
+                    font-weight: 600;
+                    margin: 12px 0 6px 0;
+                    color: #333;
+                }
+
+                /* 마크다운 리스트 스타일 */
+                .modern-bot-text ul,
+                .modern-bot-text ol {
+                    margin: 8px 0;
+                    padding-left: 20px;
+                }
+
+                .modern-bot-text li {
+                    margin: 4px 0;
+                    line-height: 1.5;
+                }
+
+                .modern-bot-text ul li {
+                    list-style-type: disc;
+                }
+
+                .modern-bot-text ol li {
+                    list-style-type: decimal;
+                }
+
+                /* 마크다운 단락 스타일 */
+                .modern-bot-text p {
+                    margin: 8px 0;
+                    line-height: 1.6;
+                }
+
+                /* 마크다운 강조 스타일 */
+                .modern-bot-text strong {
+                    font-weight: 600;
+                    color: #333;
+                }
+
+                .modern-bot-text em {
+                    font-style: italic;
+                }
+
+                .modern-bot-text code {
+                    background-color: #f5f5f5;
+                    padding: 2px 4px;
+                    border-radius: 3px;
+                    font-family: 'Courier New', monospace;
+                    font-size: 13px;
                 }
 
                 /* 플로팅 메뉴 스타일 */
@@ -4837,6 +5029,151 @@
                 }
             }
             // ...기타 버튼 처리...
+        }
+
+        /**
+         * <pre>
+         * [인라인 마크다운 포맷팅]
+         * </pre>
+         * 
+         * @param {string} text 포맷팅할 텍스트
+         * @returns {string} HTML로 변환된 텍스트
+         */
+        formatInlineMarkdown(text) {
+            return text
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                .replace(/`(.*?)`/g, '<code>$1</code>');
+        }
+
+        /**
+         * <pre>
+         * [마크다운 파싱 - 중첩 리스트 및 테이블 지원]
+         * </pre>
+         * 
+         * @param {string} text 파싱할 마크다운 텍스트
+         * @returns {string} HTML로 변환된 텍스트
+         */
+        parseMarkdown(text) {
+            // 줄 단위로 분리
+            const lines = text.split(/\r?\n/);
+            let html = '';
+            let listStack = [];
+            let prevIndent = 0;
+            
+            const listType = (line) => {
+                if (/^\s*\d+\. /.test(line)) return 'ol';
+                if (/^\s*[-*] /.test(line)) return 'ul';
+                return null;
+            };
+            
+            const getIndent = (line) => line.match(/^\s*/)[0].length;
+
+            // 테이블 파싱 함수
+            const parseTableBlock = (startIdx) => {
+                let tableHtml = '<table class="modern-md-table">';
+                let i = startIdx;
+                
+                // 헤더
+                const headerLine = lines[i];
+                const headerCells = headerLine.split('|').map(cell => cell.trim()).filter((_, idx, arr) => idx !== 0 && idx !== arr.length - 1 || arr.length === 2);
+                const colCount = headerCells.length;
+                tableHtml += '<thead><tr>' + headerCells.map(cell => `<th>${this.formatInlineMarkdown(cell)}</th>`).join('') + '</tr></thead>';
+                i++;
+                
+                // 구분선(---) 무시
+                if (i < lines.length && /^\s*\|?[-: ]+\|?\s*$/.test(lines[i])) i++;
+                tableHtml += '<tbody>';
+                
+                while (i < lines.length && /^\s*\|.*$/.test(lines[i])) {
+                    // 구분선(---) 줄은 완전히 무시
+                    if (/^\s*\|?[-: ]+\|?\s*$/.test(lines[i])) {
+                        i++;
+                        continue;
+                    }
+                    let rowCells = lines[i].split('|').map(cell => cell.trim()).filter((_, idx, arr) => idx !== 0 && idx !== arr.length - 1 || arr.length === 2);
+                    // 셀 개수 맞추기
+                    while (rowCells.length < colCount) rowCells.push('');
+                    if (rowCells.length > colCount) rowCells.length = colCount;
+                    // 모든 셀이 --- 또는 :---: 등 구분선 패턴이면 해당 행 무시
+                    const isDividerRow = rowCells.every(cell => /^:?-{3,}:?$/.test(cell));
+                    if (isDividerRow) {
+                        i++;
+                        continue;
+                    }
+                    tableHtml += '<tr>' + rowCells.map(cell => `<td>${this.formatInlineMarkdown(cell)}</td>`).join('') + '</tr>';
+                    i++;
+                }
+                tableHtml += '</tbody></table>';
+                return { tableHtml, nextIdx: i };
+            };
+
+            let i = 0;
+            while (i < lines.length) {
+                let line = lines[i];
+                
+                // 테이블 감지: |로 시작하고, 다음 줄이 |---로 시작하면 테이블로 간주
+                if (/^\s*\|.*\|\s*$/.test(line) && i + 1 < lines.length && /^\s*\|?\s*[-: ]+\|/.test(lines[i + 1])) {
+                    const { tableHtml, nextIdx } = parseTableBlock(i);
+                    html += tableHtml;
+                    i = nextIdx;
+                    prevIndent = 0;
+                    while (listStack.length) html += `</${listStack.pop()}>`;
+                    continue;
+                }
+                
+                // 헤더
+                if (/^### /.test(line)) {
+                    html += `<h3>${this.formatInlineMarkdown(line.replace(/^### /, ''))}</h3>`;
+                    i++;
+                    continue;
+                }
+                if (/^## /.test(line)) {
+                    html += `<h2>${this.formatInlineMarkdown(line.replace(/^## /, ''))}</h2>`;
+                    i++;
+                    continue;
+                }
+                if (/^# /.test(line)) {
+                    html += `<h1>${this.formatInlineMarkdown(line.replace(/^# /, ''))}</h1>`;
+                    i++;
+                    continue;
+                }
+                
+                // 리스트
+                const indent = getIndent(line);
+                const type = listType(line);
+                if (type) {
+                    if (indent > prevIndent) {
+                        html += `<${type}>`;
+                        listStack.push(type);
+                    } else if (indent < prevIndent) {
+                        while (indent < prevIndent && listStack.length) {
+                            html += `</${listStack.pop()}>`;
+                            prevIndent -= 2;
+                        }
+                    }
+                    html += `<li>${this.formatInlineMarkdown(line.replace(/^\s*([-*]|\d+\.) /, ''))}</li>`;
+                    prevIndent = indent;
+                    i++;
+                    continue;
+                } else {
+                    while (listStack.length) {
+                        html += `</${listStack.pop()}>`;
+                    }
+                    if (line.trim() !== '') {
+                        html += `<p>${this.formatInlineMarkdown(line)}</p>`;
+                    }
+                    prevIndent = 0;
+                    i++;
+                    continue;
+                }
+            }
+            
+            while (listStack.length) {
+                html += `</${listStack.pop()}>`;
+            }
+            
+            return html;
         }
 
         /**
