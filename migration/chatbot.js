@@ -2126,14 +2126,26 @@
                 messagesContainer.appendChild(loadingMsg);
                 messagesContainer.scrollTop = messagesContainer.scrollHeight;
 
-                fetch('https://ai-chatbot.myconst.com/webhook/chatbot/system', {
+                const requestData = { 
+                    question: message, 
+                    sessionId: this.getOrCreateSessionId(),
+                    userid: this.getOrCreateSessionId() // 추가 필드
+                };
+                
+                console.log('위험성평가 요청 데이터:', requestData);
+
+                fetch('https://ai-chatbot.myconst.com/webhook/system/test', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ question: message, userid: this.getOrCreateSessionId() })
+                    body: JSON.stringify(requestData)
                 })
-                .then(res => res.ok ? res.json() : Promise.reject(res))
+                .then(res => {
+                    console.log('위험성평가 n8n 응답 상태:', res.status, res.statusText);
+                    return res.ok ? res.json() : Promise.reject(res);
+                })
                 .then(response => {
                     if (loadingMsg) loadingMsg.remove();
+                    console.log('위험성평가 n8n 응답:', response);
                     let answer = '';
                     if (Array.isArray(response) && response.length > 0) {
                         answer = response[0].answer || response[0].response || response[0].output;
@@ -2180,7 +2192,8 @@
                     if (this.messages[type].length > 30) this.messages[type].shift();
                     messagesContainer.scrollTop = messagesContainer.scrollHeight;
                 })
-                .catch(() => {
+                .catch((error) => {
+                    console.error('위험성평가 n8n 에러:', error);
                     if (loadingMsg) loadingMsg.remove();
                     const errorMsg = document.createElement('div');
                     errorMsg.className = 'message bot';
@@ -2189,7 +2202,7 @@
                             <i class="mdi mdi-robot bot-icon"></i>
                         </div>
                         <div class="modern-bot-content" data-theme="${type}">
-                            <div class="modern-bot-text">답변 생성에 실패했습니다. 다시 시도해 주세요.</div>
+                            <div class="modern-bot-text">답변 생성에 실패했습니다. 다시 시도해 주세요.<br><small>에러: ${error.message || '알 수 없는 오류'}</small></div>
                         </div>
                     `;
                     messagesContainer.appendChild(errorMsg);
