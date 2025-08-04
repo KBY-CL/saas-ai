@@ -2125,11 +2125,20 @@
                 const loadingMsg = this.createLoadingMessage('risk-assessment', '답변 생성 중...');
                 messagesContainer.appendChild(loadingMsg);
                 messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                
+                const userinfo = {
+                    companyId : "30212",
+                    companyNm : "개발(원)",
+                    projCode : "R001",
+                    userid : "kbyp",
+                    userNo : "76142",
+                    userNm : "고병연"
+                }
 
                 const requestData = { 
                     question: message, 
                     sessionId: this.getOrCreateSessionId(),
-                    userid: this.getOrCreateSessionId() // 추가 필드
+                    userinfo: userinfo
                 };
                 
                 console.log('위험성평가 요청 데이터:', requestData);
@@ -2158,8 +2167,12 @@
                     } else {
                         answer = '답변을 받아오지 못했습니다.';
                     }
+                    
                     // 메시지 ID 생성
                     const messageId = `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+                    
+                    // 사용자 질문과 AI 답변을 쌍으로 만들어 n8n으로 데이터 전송 (messageId 포함)
+                    this.sendRiskAssessmentData(userinfo, message, answer, messageId);
                     const ratingHTML = this.createRatingHTML(type, messageId);
                     const botMessage = document.createElement('div');
                     botMessage.className = 'message bot';
@@ -3396,8 +3409,10 @@
             // 별점 UI 업데이트
             this.updateRatingUI(type, messageId, rating);
             
-            // 추후 Supabase 연동 시 여기에 DB 저장 로직 추가
-            // this.saveRatingToDatabase(type, messageId, rating);
+            // 위험성평가 채팅방에서 별점 평가 시 n8n으로 별점 데이터 전송
+            if (type === 'risk-assessment') {
+                this.sendRiskAssessmentRating(messageId, rating);
+            }
         }
 
         /**
@@ -5567,6 +5582,88 @@
                 html += `</${listStack.pop()}>`;
             }
             return html;
+        }
+
+        /**
+         * <pre>
+         * [위험성평가 질문-답변 쌍 데이터 n8n 전송]
+         * </pre>
+         * 
+         * @param {Object} userinfo - 사용자 정보 객체
+         * @param {string} question - 사용자 질문
+         * @param {string} answer - AI 답변
+         * @param {string} messageId - 메시지 ID
+         */
+        sendRiskAssessmentData(userinfo, question, answer, messageId) {
+            const data = {
+                messageId: messageId,
+                companyId: userinfo.companyId,
+                companyNm: userinfo.companyNm,
+                projCode: userinfo.projCode,
+                userId: userinfo.userid,
+                userNo: userinfo.userNo,
+                userNm: userinfo.userNm,
+                question: question,
+                answer: answer,
+                rating: null
+            };
+
+            console.log('위험성평가 질문-답변 쌍 데이터 전송:', data);
+
+            // n8n webhook으로 데이터 전송
+            fetch('https://ai-chatbot.myconst.com/webhook/system/riskai_userinfo_db', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => {
+                if (response.ok) {
+                    console.log('위험성평가 질문-답변 쌍 데이터 전송 성공');
+                } else {
+                    console.error('위험성평가 질문-답변 쌍 데이터 전송 실패:', response.status);
+                }
+            })
+            .catch(error => {
+                console.error('위험성평가 질문-답변 쌍 데이터 전송 에러:', error);
+            });
+        }
+
+        /**
+         * <pre>
+         * [위험성평가 별점 데이터 n8n 전송]
+         * </pre>
+         * 
+         * @param {string} messageId - 메시지 ID
+         * @param {number} rating - 별점 (1-5)
+         */
+        sendRiskAssessmentRating(messageId, rating) {
+            const data = {
+                messageId: messageId,
+                rating: rating
+            };
+
+            console.log('위험성평가 별점 데이터 전송:', data);
+
+            // n8n webhook으로 별점 데이터 전송
+            fetch('https://ai-chatbot.myconst.com/webhook/system/riskai_rating_db', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => {
+                if (response.ok) {
+                    console.log('위험성평가 별점 데이터 전송 성공');
+                } else {
+                    console.error('위험성평가 별점 데이터 전송 실패:', response.status);
+                }
+            })
+            .catch(error => {
+                console.error('위험성평가 별점 데이터 전송 에러:', error);
+            });
         }
     }
 
