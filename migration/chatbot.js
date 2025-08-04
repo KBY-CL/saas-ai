@@ -2028,6 +2028,16 @@
                 messagesContainer.appendChild(loadingMsg);
                 messagesContainer.scrollTop = messagesContainer.scrollHeight;
 
+                // 건설안전 사용자 정보
+                const userinfo = {
+                    companyId : "30212",
+                    companyNm : "개발(원)",
+                    projCode : "S001",
+                    userid : "kbyp",
+                    userNo : "76142",
+                    userNm : "고병연"
+                };
+
                 console.log('건설 안전 요청 데이터:', { userid: `construction-safety-${Date.now()}`, message: message });
 
                 fetch('https://ai-chatbot.myconst.com/webhook/99ea553b-9083-40c6-a0f2-11b7776ab22f', {
@@ -2066,8 +2076,12 @@
                         console.log('응답 구조 확인:', JSON.stringify(response, null, 2));
                         answer = '답변을 받아오지 못했습니다. 응답 구조를 확인해주세요.';
                     }
+                    
                     // 메시지 ID 생성
                     const messageId = `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+                    
+                    // 건설안전 질문-답변 쌍 데이터 전송
+                    this.sendConstructionSafetyData(userinfo, message, answer, messageId);
                     const ratingHTML = this.createRatingHTML(type, messageId);
                     const botMessage = document.createElement('div');
                     botMessage.className = 'message bot';
@@ -2103,14 +2117,25 @@
                 .catch((error) => {
                     console.error('건설 안전 n8n 에러:', error);
                     if (loadingMsg) loadingMsg.remove();
+                    
+                    // 에러 메시지 생성
+                    const errorMessage = `답변 생성에 실패했습니다. 다시 시도해 주세요. 에러: ${error.message || '알 수 없는 오류'}`;
+                    
+                    // 메시지 ID 생성
+                    const messageId = `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+                    
+                    // 에러가 발생해도 데이터 저장 (에러 메시지를 답변으로 저장)
+                    this.sendConstructionSafetyData(userinfo, message, errorMessage, messageId);
+                    
                     const errorMsg = document.createElement('div');
                     errorMsg.className = 'message bot';
+                    errorMsg.setAttribute('data-message-id', messageId);
                     errorMsg.innerHTML = `
                         <div class="modern-bot-icon" data-theme="${type}">
                             <i class="mdi mdi-robot bot-icon"></i>
                         </div>
                         <div class="modern-bot-content" data-theme="${type}">
-                            <div class="modern-bot-text">답변 생성에 실패했습니다. 다시 시도해 주세요.<br><small>에러: ${error.message || '알 수 없는 오류'}</small></div>
+                            <div class="modern-bot-text">${errorMessage}</div>
                         </div>
                     `;
                     messagesContainer.appendChild(errorMsg);
@@ -2208,14 +2233,25 @@
                 .catch((error) => {
                     console.error('위험성평가 n8n 에러:', error);
                     if (loadingMsg) loadingMsg.remove();
+                    
+                    // 에러 메시지 생성
+                    const errorMessage = `답변 생성에 실패했습니다. 다시 시도해 주세요. 에러: ${error.message || '알 수 없는 오류'}`;
+                    
+                    // 메시지 ID 생성
+                    const messageId = `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+                    
+                    // 에러가 발생해도 데이터 저장 (에러 메시지를 답변으로 저장)
+                    this.sendRiskAssessmentData(userinfo, message, errorMessage, messageId);
+                    
                     const errorMsg = document.createElement('div');
                     errorMsg.className = 'message bot';
+                    errorMsg.setAttribute('data-message-id', messageId);
                     errorMsg.innerHTML = `
                         <div class="modern-bot-icon" data-theme="${type}">
                             <i class="mdi mdi-robot bot-icon"></i>
                         </div>
                         <div class="modern-bot-content" data-theme="${type}">
-                            <div class="modern-bot-text">답변 생성에 실패했습니다. 다시 시도해 주세요.<br><small>에러: ${error.message || '알 수 없는 오류'}</small></div>
+                            <div class="modern-bot-text">${errorMessage}</div>
                         </div>
                     `;
                     messagesContainer.appendChild(errorMsg);
@@ -3412,6 +3448,11 @@
             // 위험성평가 채팅방에서 별점 평가 시 n8n으로 별점 데이터 전송
             if (type === 'risk-assessment') {
                 this.sendRiskAssessmentRating(messageId, rating);
+            }
+            
+            // 건설안전 채팅방에서 별점 평가 시 n8n으로 별점 데이터 전송
+            if (type === 'construction-safety') {
+                this.sendConstructionSafetyRating(messageId, rating);
             }
         }
 
@@ -5663,6 +5704,88 @@
             })
             .catch(error => {
                 console.error('위험성평가 별점 데이터 전송 에러:', error);
+            });
+        }
+
+        /**
+         * <pre>
+         * [건설안전 질문-답변 쌍 데이터 n8n 전송]
+         * </pre>
+         * 
+         * @param {Object} userinfo - 사용자 정보 객체
+         * @param {string} question - 사용자 질문
+         * @param {string} answer - AI 답변
+         * @param {string} messageId - 메시지 ID
+         */
+        sendConstructionSafetyData(userinfo, question, answer, messageId) {
+            const data = {
+                messageId: messageId,
+                companyId: userinfo.companyId,
+                companyNm: userinfo.companyNm,
+                projCode: userinfo.projCode,
+                userId: userinfo.userid,
+                userNo: userinfo.userNo,
+                userNm: userinfo.userNm,
+                question: question,
+                answer: answer,
+                rating: null
+            };
+
+            console.log('건설안전 질문-답변 쌍 데이터 전송:', data);
+
+            // n8n webhook으로 데이터 전송
+            fetch('https://ai-chatbot.myconst.com/webhook/system/safetyai_userinfo_db', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => {
+                if (response.ok) {
+                    console.log('건설안전 질문-답변 쌍 데이터 전송 성공');
+                } else {
+                    console.error('건설안전 질문-답변 쌍 데이터 전송 실패:', response.status);
+                }
+            })
+            .catch(error => {
+                console.error('건설안전 질문-답변 쌍 데이터 전송 에러:', error);
+            });
+        }
+
+        /**
+         * <pre>
+         * [건설안전 별점 데이터 n8n 전송]
+         * </pre>
+         * 
+         * @param {string} messageId - 메시지 ID
+         * @param {number} rating - 별점 (1-5)
+         */
+        sendConstructionSafetyRating(messageId, rating) {
+            const data = {
+                messageId: messageId,
+                rating: rating
+            };
+
+            console.log('건설안전 별점 데이터 전송:', data);
+
+            // n8n webhook으로 별점 데이터 전송
+            fetch('https://ai-chatbot.myconst.com/webhook/system/safetyai_rating_db', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => {
+                if (response.ok) {
+                    console.log('건설안전 별점 데이터 전송 성공');
+                } else {
+                    console.error('건설안전 별점 데이터 전송 실패:', response.status);
+                }
+            })
+            .catch(error => {
+                console.error('건설안전 별점 데이터 전송 에러:', error);
             });
         }
     }
