@@ -12,6 +12,7 @@ alwaysApply: true
 - **DRY (Don't Repeat Yourself)**: 중복되는 코드는 함수나 클래스로 분리하여 재사용성을 높인다.
 - **주석**: 왜(Why) 이렇게 작성했는지 설명이 필요한 부분에만 간결하게 주석을 추가한다. 코드 자체로 설명이 가능한 '무엇을(What)' 하는지에 대한 주석은 지양한다.
 - **답변**: 답변은 항상 한국어로 답변할것
+- **문제해결방식**: chain of thought 방식에 철저하게 근거하여 문제 해결을 진행 할 것
 
 ### 2. 언어 및 프레임워크 (Language & Framework)
 - **언어**: html, css, javascript

@@ -17,7 +17,7 @@
     class ChatbotApp {
         constructor() {
             // 상태 관리
-            this.bShowFloatingMenu = true;
+            this.bShowFloatingMenu = false; // 초기에는 플로팅 메뉴 숨김, "+" 버튼만 표시
             this.chatLayers = {
                 'construction-safety': { bShow: false, isMinimized: false, size: 'mini' },
                 'risk-assessment': { bShow: false, isMinimized: false, size: 'mini' },
@@ -1634,11 +1634,17 @@
                 // 채팅 레이어는 enterChatRoom에서 이미 생성됨
                 return;
             } else {
-                menuContainer.style.display = 'none';
-                // 플로팅 메뉴가 최소화되면 + 버튼(동그라미 안에 +)을 보이게
-                robotBtn.innerHTML = '<i class="mdi mdi-plus icon-plus"></i>';
-                robotBtn.classList.remove('hidden');
-                robotBtn.classList.add('floating-robot-btn-minimized');
+                // 채팅방 메뉴가 활성화되어 있으면 메뉴 표시, 아니면 플러스 버튼 표시
+                if (this.bShowFloatingMenu) {
+                    menuContainer.style.display = 'flex';
+                    robotBtn.classList.add('hidden');
+                } else {
+                    menuContainer.style.display = 'none';
+                    // 플로팅 메뉴가 최소화되면 + 버튼(동그라미 안에 +)을 보이게
+                    robotBtn.innerHTML = '<i class="mdi mdi-plus icon-plus"></i>';
+                    robotBtn.classList.remove('hidden');
+                    robotBtn.classList.add('floating-robot-btn-minimized');
+                }
             }
         }
 
@@ -1907,7 +1913,7 @@
                     botMessageColor: '#1976d2',
                     userMessageColor: '#1976d2',
                     placeholder: '위험성평가에 대해 궁금한 것을 물어보세요...',
-                    welcomeMessage: '안녕하세요? 저는 위험성평가 도우미입니다.\n\n 위험성평가 서비스를 사용하시는데 어려움이 많으시죠?\n위험성평가 사용방법을 안내해드리겠습니다.\n\n(예시: 추가위험발굴 메뉴에서 지시를 하였는데 원청사에서 조치도 같은 메뉴에서 하고 싶어)'
+                    welcomeMessage: '안녕하세요? 저는 위험성평가 도우미입니다.\n\n 위험성평가 서비스를 사용하시는데 어려움이 있으신가요?\n질문을 구체적으로 해주시면 더 정확한 답변을 받으실 수 있습니다. \n(메뉴명) + (행동 or 오류상황) \n\n (예시: 추가위험발굴지시 메뉴에서 지시를 하였는데 원청사에서 조치도 같은 메뉴에서 하고 싶어)'
                 },
                 'tax-ai': {
                     title: '세금계산서 도우미',
@@ -2168,7 +2174,7 @@
                 
                 console.log('위험성평가 요청 데이터:', requestData);
 
-                fetch('https://ai-chatbot.myconst.com/webhook/system/test', {
+                fetch('https://ai-chatbot.myconst.com/webhook/system/riskai', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(requestData)
@@ -2442,9 +2448,10 @@
             
             this.updateMinimizedChatbots();
             this.saveState();
-            this.renderFloatingMenu();
-            // 채팅방 닫기 시 전체 채팅방 리스트로 복귀
+            
+            // 채팅방 최소화 시 채팅방 메뉴로 복귀
             if (this.openChatRoomId === type) {
+                this.bShowFloatingMenu = true; // 채팅방 메뉴 표시
                 this.openChatRoomId = null;
                 this.renderFloatingMenu();
             }
@@ -2629,9 +2636,10 @@
             
             this.updateMinimizedChatbots();
             this.saveState();
-            this.renderFloatingMenu();
-            // 채팅방 닫기 시 전체 채팅방 리스트로 복귀
+            
+            // 채팅방 닫기 시 채팅방 메뉴로 복귀
             if (this.openChatRoomId === type) {
+                this.bShowFloatingMenu = true; // 채팅방 메뉴 표시
                 this.openChatRoomId = null;
                 this.renderFloatingMenu();
             }
@@ -2847,7 +2855,7 @@
          */
         saveState() {
             const state = {
-                bShowFloatingMenu: this.bShowFloatingMenu,
+                // bShowFloatingMenu는 저장하지 않음 - 페이지 새로고침 시 항상 false로 초기화
                 chatLayers: this.chatLayers,
                 minimizedChatbots: this.minimizedChatbots,
                 transparency: this.transparency,
@@ -2867,7 +2875,7 @@
             const savedState = localStorage.getItem('chatbotState');
             if (savedState) {
                 const state = JSON.parse(savedState);
-                this.bShowFloatingMenu = state.bShowFloatingMenu !== undefined ? state.bShowFloatingMenu : true;
+                // bShowFloatingMenu는 로드하지 않음 - constructor에서 설정된 false 값 유지
                 this.chatLayers = state.chatLayers || this.chatLayers;
                 this.minimizedChatbots = state.minimizedChatbots || [];
                 this.transparency = state.transparency || this.transparency;
@@ -3266,6 +3274,11 @@
             const robotBtn = document.getElementById('floating-robot-btn');
             robotBtn.addEventListener('click', () => this.handleChatbot());
 
+            // 외부 클릭 감지 이벤트 리스너 추가
+            document.addEventListener('click', (e) => {
+                this.handleOutsideClick(e);
+            });
+
             // Keyboard events
             document.addEventListener('keydown', (e) => {
                 // ESC: Close all chat layers
@@ -3289,6 +3302,46 @@
                     }
                 }
             });
+        }
+
+        /**
+         * <pre>
+         * [외부 클릭 감지 및 처리]
+         * </pre>
+         */
+        handleOutsideClick(event) {
+            // 채팅방 메뉴가 활성화되어 있고, 개별 채팅방이 열려있지 않을 때만 처리
+            if (this.bShowFloatingMenu && this.openChatRoomId === null) {
+                const menuContainer = document.getElementById('floating-menu-container');
+                const robotBtn = document.getElementById('floating-robot-btn');
+                
+                // 확인 팝업이 활성화되어 있는지 확인 (개별 채팅방 닫기 팝업)
+                const confirmationPopup = document.querySelector('.close-confirmation-popup');
+                const isConfirmationPopupActive = confirmationPopup && confirmationPopup.style.display !== 'none';
+                
+                // 채팅방 메뉴 닫기 팝업이 활성화되어 있는지 확인
+                const rootClosePopup = document.querySelector('.popup-container');
+                const isRootClosePopupActive = rootClosePopup && rootClosePopup.parentElement && rootClosePopup.parentElement.style.display !== 'none';
+                
+                // 확인 팝업이 활성화되어 있으면 외부 클릭 무시
+                if (isConfirmationPopupActive || isRootClosePopupActive) {
+                    return;
+                }
+                
+                // 클릭된 요소가 메뉴 컨테이너나 플러스 버튼 내부인지 확인
+                const isClickInsideMenu = menuContainer && menuContainer.contains(event.target);
+                const isClickInsideRobotBtn = robotBtn && robotBtn.contains(event.target);
+                
+                // 개별 채팅방의 버튼 클릭인지 확인 (최소화, 닫기 버튼 등)
+                const isChatLayerButton = event.target.closest('.chat-layer button');
+                
+                // 메뉴 영역 외부를 클릭한 경우 (단, 채팅방 버튼 클릭은 제외)
+                if (!isClickInsideMenu && !isClickInsideRobotBtn && !isChatLayerButton) {
+                    this.bShowFloatingMenu = false;
+                    this.renderFloatingMenu();
+                    this.saveState();
+                }
+            }
         }
 
         /**
