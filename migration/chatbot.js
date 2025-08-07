@@ -276,8 +276,8 @@
                 }
 
                 .pill-minimize-btn {
-                    background: #fff !important;
-                    color: #222 !important;
+                    background: #fff;
+                    color: #222;
                     border-radius: 50%;
                     box-shadow: none;
                     margin-top: 10px;
@@ -288,18 +288,18 @@
                     align-items: center;
                     justify-content: center;
                     padding: 0;
-                    border: 2px solid #222 !important;
+                    border: 2px solid #222;
                     cursor: pointer;
                 }
 
                 .pill-minimize-btn:hover, .pill-minimize-btn:focus {
-                    background: #f5f5f5 !important;
-                    color: #111 !important;
-                    border: 2px solid #111 !important;
+                    background: #f5f5f5;
+                    color: #111;
+                    border: 2px solid #111;
                 }
 
                 .pill-minimize-btn .mdi {
-                    color: #222 !important;
+                    color: #222;
                     font-size: 28px;
                 }
 
@@ -347,13 +347,13 @@
 
                 body .floating-robot-btn[style]:hover,
                 body .floating-robot-btn[style]:focus {
-                    background: #dc2626 !important;
-                    color: #fff !important;
-                    border: 2px solid #dc2626 !important;
+                    background: #dc2626;
+                    color: #fff;
+                    border: 2px solid #dc2626;
                 }
 
                 body .floating-robot-btn[style] .mdi {
-                    color: #fff !important;
+                    color: #fff;
                 }
 
                 /* 숨김 클래스 */
@@ -883,7 +883,7 @@
                     height: 50px;
                     right: 24px;
                     bottom: 24px;
-                    display: flex !important;
+                    display: flex;
                     align-items: center;
                     justify-content: center;
                     background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
@@ -1083,7 +1083,7 @@
 
                 .pill-menu-btn.active {
                     border-width: 2.5px;
-                    border-color: var(--active-glow, #c53030) !important;
+                    border-color: var(--active-glow, #c53030);
                 }
                 .pill-menu-btn.active-glow {
                     position: relative;
@@ -1309,11 +1309,11 @@
                 }
 
                 .chat-card[data-theme="kakao"] .chat-avatar {
-                    background: #fee500 !important;
+                    background: #fee500;
                 }
 
                 .chat-card[data-theme="kakao"] .chat-avatar .mdi {
-                    color: #000 !important;
+                    color: #000;
                 }
 
                 .sidebar-chat {
@@ -1321,7 +1321,7 @@
                 }
 
                 .sidebar-chat:hover {
-                    background: #d0d0d0 !important;
+                    background: #d0d0d0;
                     transform: scale(1.05);
                     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
                 }
@@ -3647,11 +3647,11 @@
                 }
 
                 .modern-star-btn {
-                    padding: 2px !important;
-                    min-width: 20px !important;
-                    width: 20px !important;
-                    height: 20px !important;
-                    border-radius: 2px !important;
+                    padding: 2px;
+                    min-width: 20px;
+                    width: 20px;
+                    height: 20px;
+                    border-radius: 2px;
                     transition: all 0.2s ease;
                     background: transparent;
                     border: none;
@@ -5275,8 +5275,8 @@
                     msg.id = 'site-ai-search-form-msg';
                     msg.innerHTML = `
                         <style>
-                            #site-ai-search-btn:hover { background: #388e3c !important; }
-                            #site-ai-search-close-btn:hover { background: #bdbdbd !important; color: #222 !important; }
+                            #site-ai-search-btn:hover { background: #388e3c; }
+                            #site-ai-search-close-btn:hover { background: #bdbdbd; color: #222; }
                         </style>
                         <div class=\"modern-bot-icon\" style=\"background: #4caf50;\">
                             <i class=\"mdi mdi-robot\" style=\"color: white; font-size: 20px;\"></i>
@@ -5355,10 +5355,10 @@
                             const resultMsg = document.createElement('div');
                             resultMsg.className = 'message bot';
                             resultMsg.innerHTML = `
-                                <div class=\"modern-bot-icon\" style=\"background: #4caf50 !important;\">
+                                <div class=\"modern-bot-icon\" style=\"background: #4caf50;\">
                                     <i class=\"mdi mdi-robot\" style=\"color: white; font-size: 20px;\"></i>
                                 </div>
-                                <div class=\"modern-bot-content\" style=\"border: 1.5px solid #4caf50 !important; background: #e6f4ea !important;\">
+                                <div class=\"modern-bot-content\" style=\"border: 1.5px solid #4caf50; background: #e6f4ea;\">
                                     <div class=\"modern-bot-text\">
                                         ${responseText}
                                     </div>
@@ -5378,10 +5378,10 @@
                             const resultMsg = document.createElement('div');
                             resultMsg.className = 'message bot';
                             resultMsg.innerHTML = `
-                                <div class=\"modern-bot-icon\" style=\"background: #4caf50 !important;\">
+                                <div class=\"modern-bot-icon\" style=\"background: #4caf50;\">
                                     <i class=\"mdi mdi-robot\" style=\"color: white; font-size: 20px;\"></i>
                                 </div>
-                                <div class=\"modern-bot-content\" style=\"border: 1.5px solid #4caf50 !important; background: #e6f4ea !important;\">
+                                <div class=\"modern-bot-content\" style=\"border: 1.5px solid #4caf50; background: #e6f4ea;\">
                                     <div class=\"modern-bot-text\">
                                         조회 요청에 실패했습니다. 다시 시도해 주세요.
                                     </div>

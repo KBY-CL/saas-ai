@@ -375,10 +375,10 @@
       /* 모바일 반응형 */
       @media (max-width: 768px) {
         .cs-chatbot-window:not(.max) {
-          width: calc(100vw - 24px) !important;
-          height: calc(100vh - 24px) !important;
-          bottom: 12px !important;
-          right: 12px !important;
+          width: calc(100vw - 24px);
+          height: calc(100vh - 24px);
+          bottom: 12px;
+          right: 12px;
         }
       }
     `;
