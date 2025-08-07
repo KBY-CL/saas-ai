@@ -202,8 +202,8 @@
                 /* 플로팅 메뉴 */
                 .floating-menu.pill-menu {
                     position: fixed;
-                    right: 48px;
-                    bottom: 48px;
+                    right: 80px;
+                    bottom: 80px;
                     top: auto;
                     transform: none;
                     z-index: 1000;
@@ -218,8 +218,8 @@
 
                 @media (max-width: 768px) {
                     .floating-menu.pill-menu {
-                        right: 10px;
-                        bottom: 10px;
+                        right: 20px;
+                        bottom: 20px;
                         min-width: 0;
                         width: 95vw;
                         max-width: 95vw;
@@ -306,8 +306,8 @@
                 /* 로봇 아이콘 버튼 */
                 body .floating-robot-btn {
                     position: fixed;
-                    right: 48px;
-                    bottom: 48px;
+                    right: 80px;
+                    bottom: 80px;
                     top: auto;
                     transform: none;
                     z-index: 1000;
@@ -373,8 +373,8 @@
                     border-radius: 50% !important;
                     align-items: center !important;
                     justify-content: center !important;
-                    right: 48px !important;
-                    bottom: 48px !important;
+                    right: 80px !important;
+                    bottom: 80px !important;
                     position: fixed !important;
                 }
 
@@ -384,8 +384,8 @@
 
                 @media (max-width: 768px) {
                     .floating-robot-btn {
-                        right: 10px;
-                        bottom: 10px;
+                        right: 20px;
+                        bottom: 20px;
                     }
                 }
 
@@ -2034,15 +2034,26 @@
                 messagesContainer.appendChild(loadingMsg);
                 messagesContainer.scrollTop = messagesContainer.scrollHeight;
 
-                // 건설안전 사용자 정보
+                // 건설안전 사용자 정보 (더미데이터)
                 const userinfo = {
-                    companyId : "30212",
-                    companyNm : "개발(원)",
-                    projCode : "S001",
+                    companyId : "로컬",
+                    companyNm : "로컬테스트",
+                    projCode : "로컬현장",
                     userid : "kbyp",
                     userNo : "76142",
                     userNm : "고병연"
                 };
+                
+                /*
+                const userinfo = {
+                    companyId : $p.top().wfrmSide.getWindow().scwin.userInfo.fixData.companyId,
+                    companyNm : $p.top().wfrmSide.getWindow().scwin.userInfo.fixData.companyNm,
+                    projCode : $p.top().wfrmSide.getWindow().scwin.userInfo.fixData.projCode,
+                    userid : $p.top().wfrmSide.getWindow().scwin.userInfo.fixData.userId,
+                    userNo : $p.top().wfrmSide.getWindow().scwin.userInfo.fixData.userNo,
+                    userNm : $p.top().wfrmSide.getWindow().scwin.userInfo.fixData.userNm,
+                };
+                */
 
                 console.log('건설 안전 요청 데이터:', { userid: `construction-safety-${Date.now()}`, message: message });
 
@@ -2157,14 +2168,27 @@
                 messagesContainer.appendChild(loadingMsg);
                 messagesContainer.scrollTop = messagesContainer.scrollHeight;
                 
+                // 위험성평가 사용자 정보 (더미데이터)
                 const userinfo = {
-                    companyId : "30212",
-                    companyNm : "개발(원)",
-                    projCode : "R001",
+                    companyId : "로컬",
+                    companyNm : "로컬테스트",
+                    projCode : "로컬현장",
                     userid : "kbyp",
                     userNo : "76142",
                     userNm : "고병연"
-                }
+                };
+
+                /*
+                const userinfo = {
+                    companyId : $p.top().wfrmSide.getWindow().scwin.userInfo.fixData.companyId,
+                    companyNm : $p.top().wfrmSide.getWindow().scwin.userInfo.fixData.companyNm,
+                    projCode : $p.top().wfrmSide.getWindow().scwin.userInfo.fixData.projCode,
+                    userid : $p.top().wfrmSide.getWindow().scwin.userInfo.fixData.userId,
+                    userNo : $p.top().wfrmSide.getWindow().scwin.userInfo.fixData.userNo,
+                    userNm : $p.top().wfrmSide.getWindow().scwin.userInfo.fixData.userNm,
+                };
+                */
+
 
                 const requestData = { 
                     question: message, 
