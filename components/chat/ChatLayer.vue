@@ -185,12 +185,70 @@
           <v-icon :color="sendBtnIconColor">mdi-send</v-icon>
         </v-btn>
       </v-card-actions>
+      
+      <!-- 구독 버튼 영역 -->
+      <v-card-actions class="subscription-area px-3 py-2" style="background: #f8f9fa; border-top: 1px solid #e0e0e0;">
+        <v-btn
+          color="primary"
+          variant="tonal"
+          prepend-icon="mdi-star-circle"
+          class="subscription-btn"
+          @click="showSubscriptionDialog"
+        >
+          구독 관리
+        </v-btn>
+      </v-card-actions>
+      
       <v-snackbar v-model="bShowCopySnackbar" color="success" :timeout="1500" location="top right">
         메시지가 복사되었습니다.
       </v-snackbar>
       <v-snackbar v-model="bShowMicSnackbar" color="info" :timeout="2000" location="top right">
         {{ micSnackbarText }}
       </v-snackbar>
+      
+      <!-- 구독 관리 다이얼로그 -->
+      <v-dialog v-model="bShowSubscriptionDialog" max-width="400">
+        <v-card>
+          <v-card-title class="d-flex align-center">
+            <v-icon color="primary" class="mr-2">mdi-star-circle</v-icon>
+            구독 관리
+          </v-card-title>
+          <v-card-text>
+            <div class="subscription-info mb-4">
+              <h3 class="text-h6 mb-2">스마트위험성평가GPT</h3>
+              <p class="text-body-2 text-medium-emphasis">현재 버전 베타버전</p>
+              <p class="text-caption text-medium-emphasis">*베타버전 기간동안은 무료로 사용 하실수 있습니다.</p>
+            </div>
+            
+            <v-divider class="mb-4"></v-divider>
+            
+            <div class="subscription-benefits">
+              <h4 class="text-subtitle-1 mb-3">구독 혜택</h4>
+              <div class="benefit-item d-flex align-center mb-2">
+                <v-icon color="success" size="small" class="mr-2">mdi-check-circle</v-icon>
+                <span class="text-body-2">무제한 채팅</span>
+              </div>
+              <div class="benefit-item d-flex align-center mb-2">
+                <v-icon color="success" size="small" class="mr-2">mdi-check-circle</v-icon>
+                <span class="text-body-2">고급 기능 (음성 인식, 파일 업로드 등)</span>
+              </div>
+              <div class="benefit-item d-flex align-center mb-2">
+                <v-icon color="success" size="small" class="mr-2">mdi-check-circle</v-icon>
+                <span class="text-body-2">24시간 기술 지원</span>
+              </div>
+            </div>
+          </v-card-text>
+          <v-card-actions>
+            <v-spacer></v-spacer>
+            <v-btn color="primary" @click="handleSubscribe">
+              구독하기
+            </v-btn>
+            <v-btn variant="text" @click="bShowSubscriptionDialog = false">
+              닫기
+            </v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
     </v-card>
   </v-dialog>
   
@@ -224,6 +282,9 @@ const messages = ref<{ id: string; content: string; isUser: boolean; sentAt?: st
 const bShowCopySnackbar = ref(false)
 const messagesArea = ref<HTMLElement | null>(null)
 const messageList = ref<HTMLElement | null>(null)
+
+// 구독 관련 상태
+const bShowSubscriptionDialog = ref(false)
 
 // 투명도 관련 상태
 const transparency = ref(100) // 100% = 완전 불투명 (1.0), 90% = 최대 투명 (0.1)
@@ -719,6 +780,26 @@ async function copyMessage(content: string) {
   } catch (e) {
     alert('복사에 실패했습니다.')
   }
+}
+
+/**
+ * <pre>
+ * [구독 다이얼로그 표시]
+ * </pre>
+ */
+function showSubscriptionDialog() {
+  bShowSubscriptionDialog.value = true
+}
+
+/**
+ * <pre>
+ * [구독 처리]
+ * </pre>
+ */
+function handleSubscribe() {
+  // 구독 기능 구현 (현재는 알림만 표시)
+  alert('구독 기능은 베타 버전에서 무료로 제공됩니다.')
+  bShowSubscriptionDialog.value = false
 }
 
 const isSendBtnHovered = ref(false)
